@@ -3,6 +3,7 @@
 OLD
 notes/password.txt
 ?backup
+*.tar
 
 
 ## Ignore Visual Studio temporary files, build results, and
