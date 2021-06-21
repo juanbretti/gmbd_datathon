@@ -1,6 +1,7 @@
 # https://opendata.aemet.es/centrodedescargas/ejemProgramas?
 
 # %%
+# juanbretti+aemet@student.ie.edu
 key = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqdWFuYnJldHRpK2FlbWV0QHN0dWRlbnQuaWUuZWR1IiwianRpIjoiZGI5OWRjNGQtY2VjZS00MjQ3LTk5ZTAtMjZiYTk4ODdkYTIwIiwiaXNzIjoiQUVNRVQiLCJpYXQiOjE2MjQyMTQyMjIsInVzZXJJZCI6ImRiOTlkYzRkLWNlY2UtNDI0Ny05OWUwLTI2YmE5ODg3ZGEyMCIsInJvbGUiOiIifQ.Qx9OhUKCfMOaHLUlZnzwpQpWimdQXbQ4p-vbMolX_qc'
 
 # %%
@@ -32,6 +33,9 @@ df.head().T
 # %%
 
 df.shape
+
+
+# %% ###########################################
 
 
 # %%
