@@ -2,6 +2,7 @@
 # https://opendata-movilidad.mitma.es/maestra1-mitma-distritos/ficheros-diarios/2020-02/20200221_maestra_1_mitma_distrito.txt.gz
 
 # %%
+from numpy.lib.arraysetops import isin
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -13,6 +14,15 @@ from datetime import datetime
 
 # %%
 def read_mitma(date, detail='distrito'):
+    """Download information
+
+    Args:
+        date (datetime): Date
+        detail (str, optional): Detail to be downloaded. Defaults to 'distrito' ['distrito', 'municipio'].
+
+    Returns:
+        DataFrame: Downloaded information
+    """
     # https://stackabuse.com/how-to-format-dates-in-python
     month_ = date.strftime("%Y-%m")
     day_ = date.strftime("%Y%m%d")
@@ -21,10 +31,6 @@ def read_mitma(date, detail='distrito'):
     df = pd.read_csv(url, sep='|', decimal='.', parse_dates=['fecha'])
     return df
 
-# %%
-date = datetime(2020, 2, 21)
-df = read_mitma(date, detail='distrito')
-df.groupby(['fecha', 'origen', 'destino']).agg({'viajes': ['sum', 'mean', 'std', 'min', 'max'], 'viajes_km': ['sum', 'mean', 'std', 'min', 'max']})
 # %%
 # https://stackoverflow.com/questions/993358/creating-a-range-of-dates-in-python
 # https://stackoverflow.com/a/26583750/3780957
@@ -36,7 +42,40 @@ mydates[0].day
 
 # %%
 postal_codes = pd.read_csv('https://postal.cat/download/postalcat.csv', sep=';', converters = {'cp': str})
+municipio_mitma = pd.read_csv('data/mitma.gob.es/relaciones_municipio_mitma.csv', sep='|', converters = {'municipio': str, 'municipio_mitma': str})
+
+# Remove the _AM
+municipio_mitma['municipio_mitma_simple'] = municipio_mitma['municipio_mitma'].apply(lambda x: x.replace("_AM", ""))
+
+# Keep one per `mitma`
+municipio_mitma = municipio_mitma[['municipio_mitma', 'municipio_mitma_simple']].drop_duplicates()
+
+postal_codes = postal_codes[['cp', 'provincia']].drop_duplicates()
+postal_codes = postal_codes.merge(municipio_mitma, left_on='cp', right_on='municipio_mitma_simple')
+postal_codes = postal_codes[['municipio_mitma', 'cp', 'provincia']]
 
 # %%
-postal_codes['provincia'].value_counts()
+date = datetime(2020, 2, 21)
+df = read_mitma(date, detail='municipio')
+
+# Extract the province number
+df1 = df.copy()
+df1['origen_province'] = [x[0:2] for x in df['origen']]
+df1['destino_province'] = [x[0:2] for x in df['destino']]
+
+df2 = df1.groupby(['fecha', 'origen_province', 'destino_province']).agg({'viajes': ['sum', 'mean', 'std', 'min', 'max'], 'viajes_km': ['sum', 'mean', 'std', 'min', 'max']})
+
+df2 = df2.reset_index()
+df2.columns = ['_'.join(x) for x in df2.columns.to_flat_index()]
+
+# df3 = df2.reset_index().merge(postal_codes.add_prefix('origen_'), left_on='origen_', right_on='origen_municipio_mitma')
+# df3 = df3.merge(postal_codes.add_prefix('destino_'), left_on='destino_', right_on='destino_municipio_mitma')
+
+df3.columns
+
 # %%
+a = df2['origen_'].drop_duplicates()
+b = municipio_mitma['municipio_mitma'].drop_duplicates()
+
+a.isin(b).value_counts()
+b.isin(a).value_counts()

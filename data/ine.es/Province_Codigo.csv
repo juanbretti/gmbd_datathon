@@ -1,0 +1,55 @@
+CODAUTO	Comunidad Autónoma	CPRO	Provincia	Code	aemet
+01	Andalucía	04	Almería	AL	ALMERIA
+01	Andalucía	11	Cádiz	CA	CADIZ
+01	Andalucía	14	Córdoba	CO	CORDOBA
+01	Andalucía	18	Granada	GR	GRANADA
+01	Andalucía	21	Huelva	H	HUELVA
+01	Andalucía	23	Jaén	J	JAEN
+01	Andalucía	29	Málaga	MA	MALAGA
+01	Andalucía	41	Sevilla	SE	SEVILLA
+02	Aragón	22	Huesca	HU	HUESCA
+02	Aragón	44	Teruel	TE	TERUEL
+02	Aragón	50	Zaragoza	Z	ZARAGOZA
+03	Asturias, Principado de	33	Asturias	O	ASTURIAS
+04	Balears, Illes	07	Balears, Illes	PM	ILLES BALEARS
+05	Canarias	35	Palmas, Las	GC	LAS PALMAS
+05	Canarias	38	Santa Cruz de Tenerife	TF	STA. CRUZ DE TENERIFE
+06	Cantabria	39	Cantabria	S	CANTABRIA
+07	Castilla y León	05	Ávila	AV	AVILA
+07	Castilla y León	09	Burgos	BU	BURGOS
+07	Castilla y León	24	León	LE	LEON
+07	Castilla y León	34	Palencia	P	PALENCIA
+07	Castilla y León	37	Salamanca	SA	SALAMANCA
+07	Castilla y León	40	Segovia	SG	SEGOVIA
+07	Castilla y León	42	Soria	SO	SORIA
+07	Castilla y León	47	Valladolid	VA	VALLADOLID
+07	Castilla y León	49	Zamora	ZA	ZAMORA
+08	Castilla-La Mancha	02	Albacete	AB	ALBACETE
+08	Castilla-La Mancha	13	Ciudad Real	CR	CIUDAD REAL
+08	Castilla-La Mancha	16	Cuenca	CU	CUENCA
+08	Castilla-La Mancha	19	Guadalajara	GU	GUADALAJARA
+08	Castilla-La Mancha	45	Toledo	TO	TOLEDO
+09	Cataluña	08	Barcelona	B	BARCELONA
+09	Cataluña	17	Girona	GI	GIRONA
+09	Cataluña	25	Lleida	L	LLEIDA
+09	Cataluña	43	Tarragona	T	TARRAGONA
+10	Comunitat Valenciana	03	Alicante/Alacant	A	ALICANTE
+10	Comunitat Valenciana	12	Castellón/Castelló	CS	CASTELLON
+10	Comunitat Valenciana	46	Valencia/València	V	VALENCIA
+11	Extremadura	06	Badajoz	BA	BADAJOZ
+11	Extremadura	10	Cáceres	CC	CACERES
+12	Galicia	15	Coruña, A	C	A CORUÑA
+12	Galicia	27	Lugo	LU	LUGO
+12	Galicia	32	Ourense	OR	OURENSE
+12	Galicia	36	Pontevedra	PO	PONTEVEDRA
+13	Madrid, Comunidad de	28	Madrid	M	MADRID
+14	Murcia, Región de	30	Murcia	MU	MURCIA
+15	Navarra, Comunidad Foral de	31	Navarra	NA	NAVARRA
+16	País Vasco	01	Araba/Álava	VI	ARABA/ALAVA
+16	País Vasco	48	Bizkaia	BI	BIZKAIA
+16	País Vasco	20	Gipuzkoa	SS	GIPUZKOA
+17	Rioja, La	26	Rioja, La	LO	LA RIOJA
+18	Ceuta	51	Ceuta	CE	CEUTA
+19	Melilla	52	Melilla	ML	MELILLA
+15	Navarra, Comunidad Foral de	31	Navarra (CA)	NC	NAVARRA (CA)
+07	Castilla y León	40	Castilla y León (CA)	CL	CASTILLA Y LEÓN (CA)
