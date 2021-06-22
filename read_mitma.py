@@ -6,6 +6,7 @@ from numpy.lib.arraysetops import isin
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import helpers
 
 # %%
 # url = 'https://opendata-movilidad.mitma.es/maestra1-mitma-municipios/ficheros-diarios/2020-02/20200221_maestra_1_mitma_municipio.txt.gz'
@@ -35,8 +36,8 @@ def read_mitma(date, detail='distrito'):
 # https://stackoverflow.com/questions/993358/creating-a-range-of-dates-in-python
 # https://stackoverflow.com/a/26583750/3780957
 
-date1 = '2011-05-03'
-date2 = '2011-05-10'
+date1 = '2021-05-03'
+date2 = '2021-05-10'
 mydates = pd.date_range(date1, date2).tolist()
 mydates[0].day
 
@@ -55,7 +56,8 @@ postal_codes = postal_codes.merge(municipio_mitma, left_on='cp', right_on='munic
 postal_codes = postal_codes[['municipio_mitma', 'cp', 'provincia']]
 
 # %%
-date = datetime(2020, 2, 21)
+# date = datetime(2020, 2, 21)
+date = mydates[0]
 df = read_mitma(date, detail='municipio')
 
 # Extract the province number
@@ -71,11 +73,8 @@ df2.columns = ['_'.join(x) for x in df2.columns.to_flat_index()]
 # df3 = df2.reset_index().merge(postal_codes.add_prefix('origen_'), left_on='origen_', right_on='origen_municipio_mitma')
 # df3 = df3.merge(postal_codes.add_prefix('destino_'), left_on='destino_', right_on='destino_municipio_mitma')
 
-df3.columns
-
 # %%
-a = df2['origen_'].drop_duplicates()
-b = municipio_mitma['municipio_mitma'].drop_duplicates()
-
-a.isin(b).value_counts()
-b.isin(a).value_counts()
+# Source `Madrid`
+# idx = df2['origen_province_']=='28'
+df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
+df2_pivot.shape
