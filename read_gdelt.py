@@ -56,14 +56,14 @@ import io
 # 20210621235959
 # url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=%22covid%20OR%20coronavirus%22&mode=timelinevol&STARTDATETIME=20200101000000&ENDDATETIME=20210621235959&FORMAT=csv'
 # url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=coronavirus&mode=timelinevol&STARTDATETIME=20200101000000&ENDDATETIME=20210621235959&FORMAT=csv&sourcecountry=SP'
-url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=covid&mode=timelinevol&STARTDATETIME=20200101000000&ENDDATETIME=20210621235959&FORMAT=csv&sourcecountry=SP'
+# url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=covid&mode=timelinevol&STARTDATETIME=20200101000000&ENDDATETIME=20210621235959&FORMAT=csv&sourcecountry=SP'
 # url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=covid&mode=Timeline&STARTDATETIME=20200101000000&ENDDATETIME=20210621235959&FORMAT=csv&sourcecountry=SP'
-response = requests.get(url)
-df = pd.read_csv(io.StringIO(response.content.decode('utf-8')))
 
-# csv_file = open('downloaded.csv', 'wb')
-# csv_file.write(url_content)
-# csv_file.close()
+def gdelt_search(x):
+    url = f'https://api.gdeltproject.org/api/v2/doc/doc?query=%22{x}%22%20sourcecountry:SP&mode=timelinevol&timespan=18m&format=CSV'
+    response = requests.get(url)
+    df = pd.read_csv(io.StringIO(response.content.decode('utf-8')))
+    return df
 
 # %%
 # ax = df.groupby('Series')['Value'].plot(kind='kde', legend=True)
@@ -73,5 +73,6 @@ df = pd.read_csv(io.StringIO(response.content.decode('utf-8')))
 # fig = sns.kdeplot(data=df, kind='kde', x='Date', y='Value', hue='Series')
 
 # %%
+df = gdelt_search('confinamiento')
 df.plot(x='Date', y='Value')
 # %%

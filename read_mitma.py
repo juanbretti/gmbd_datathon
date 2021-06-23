@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import helpers
+from joblib import dump, load
 
 # %%
 # url = 'https://opendata-movilidad.mitma.es/maestra1-mitma-municipios/ficheros-diarios/2020-02/20200221_maestra_1_mitma_municipio.txt.gz'
@@ -14,7 +15,7 @@ import helpers
 # df = pd.read_csv(url, sep='|', decimal='.', parse_dates=['fecha'])
 
 # %%
-def read_mitma(date, detail='distrito'):
+def read_mitma(date, detail='municipio'):
     """Download information
 
     Args:
@@ -36,10 +37,57 @@ def read_mitma(date, detail='distrito'):
 # https://stackoverflow.com/questions/993358/creating-a-range-of-dates-in-python
 # https://stackoverflow.com/a/26583750/3780957
 
-date1 = '2021-05-03'
-date2 = '2021-05-10'
-mydates = pd.date_range(date1, date2).tolist()
-mydates[0].day
+date_start = '2020-02-21'
+date_end = '2021-05-09'
+# date_end = '2020-03-10'
+dates_all = pd.date_range(date_start, date_end)
+
+# %%
+df_aggregate = pd.DataFrame()
+
+for idx, date in pd.DataFrame(dates_all).iterrows():
+    try:
+        # Download
+        df = read_mitma(date[0], detail='municipio')
+        
+        # Group by
+        df1 = df.copy()
+        df1['origen_province'] = [x[0:2] for x in df['origen']]
+        df1['destino_province'] = [x[0:2] for x in df['destino']]
+
+        df2 = df1.groupby(['fecha', 'origen_province', 'destino_province']).agg({'viajes': ['sum', 'mean', 'std', 'min', 'max'], 'viajes_km': ['sum', 'mean', 'std', 'min', 'max']})
+
+        # Change columns name
+        df2 = df2.reset_index()
+        df2.columns = ['_'.join(x) for x in df2.columns.to_flat_index()]
+
+        # Append
+        df_aggregate = df_aggregate.append(df2, ignore_index=True)
+    except:
+        print('Error', date[0])
+
+    # Temporary store
+    if idx % 10 == 0:
+        print('Store', idx)
+        # dump(df_aggregate, 'storage/df_aggregate.joblib') 
+
+# Final store
+# dump(df_aggregate, 'storage/df_aggregate.joblib')
+
+# %%
+# df3 = df2.reset_index().merge(postal_codes.add_prefix('origen_'), left_on='origen_', right_on='origen_municipio_mitma')
+# df3 = df3.merge(postal_codes.add_prefix('destino_'), left_on='destino_', right_on='destino_municipio_mitma')
+
+# %%
+df_aggregate = load('storage/df_aggregate.joblib')
+
+# Source `Madrid`
+# idx = df2['origen_province_']=='28'
+# df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
+df_pivot = pd.pivot_table(df_aggregate, values=['viajes_sum'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum}, fill_value=0)
+df_pivot.shape
+
+df_pivot.reset_index()['fecha_'].value_counts()
 
 # %%
 postal_codes = pd.read_csv('https://postal.cat/download/postalcat.csv', sep=';', converters = {'cp': str})
@@ -54,27 +102,3 @@ municipio_mitma = municipio_mitma[['municipio_mitma', 'municipio_mitma_simple']]
 postal_codes = postal_codes[['cp', 'provincia']].drop_duplicates()
 postal_codes = postal_codes.merge(municipio_mitma, left_on='cp', right_on='municipio_mitma_simple')
 postal_codes = postal_codes[['municipio_mitma', 'cp', 'provincia']]
-
-# %%
-# date = datetime(2020, 2, 21)
-date = mydates[0]
-df = read_mitma(date, detail='municipio')
-
-# Extract the province number
-df1 = df.copy()
-df1['origen_province'] = [x[0:2] for x in df['origen']]
-df1['destino_province'] = [x[0:2] for x in df['destino']]
-
-df2 = df1.groupby(['fecha', 'origen_province', 'destino_province']).agg({'viajes': ['sum', 'mean', 'std', 'min', 'max'], 'viajes_km': ['sum', 'mean', 'std', 'min', 'max']})
-
-df2 = df2.reset_index()
-df2.columns = ['_'.join(x) for x in df2.columns.to_flat_index()]
-
-# df3 = df2.reset_index().merge(postal_codes.add_prefix('origen_'), left_on='origen_', right_on='origen_municipio_mitma')
-# df3 = df3.merge(postal_codes.add_prefix('destino_'), left_on='destino_', right_on='destino_municipio_mitma')
-
-# %%
-# Source `Madrid`
-# idx = df2['origen_province_']=='28'
-df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df2_pivot.shape

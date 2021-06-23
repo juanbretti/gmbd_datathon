@@ -4,6 +4,7 @@ OLD
 notes/password.txt
 ?backup
 *.tar
+*.joblib
 
 
 ## Ignore Visual Studio temporary files, build results, and
