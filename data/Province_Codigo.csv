@@ -1,0 +1,55 @@
+Code comunidad autónoma numérico	Code comunidad autónoma alpha	Comunidad Autónoma	Code provincia numérico	Code provincia alpha	Provincia	aemet
+01	AN	Andalucía	04	AL	Almería	ALMERIA
+01	AN	Andalucía	11	CA	Cádiz	CADIZ
+01	AN	Andalucía	14	CO	Córdoba	CORDOBA
+01	AN	Andalucía	18	GR	Granada	GRANADA
+01	AN	Andalucía	21	H	Huelva	HUELVA
+01	AN	Andalucía	23	J	Jaén	JAEN
+01	AN	Andalucía	29	MA	Málaga	MALAGA
+01	AN	Andalucía	41	SE	Sevilla	SEVILLA
+02	AR	Aragón	22	HU	Huesca	HUESCA
+02	AR	Aragón	44	TE	Teruel	TERUEL
+02	AR	Aragón	50	Z	Zaragoza	ZARAGOZA
+03	AS	Asturias, Principado de	33	O	Asturias	ASTURIAS
+04	IB	Balears, Illes	07	PM	Balears, Illes	ILLES BALEARS
+05	CN	Canarias	35	GC	Palmas, Las	LAS PALMAS
+05	CN	Canarias	38	TF	Santa Cruz de Tenerife	STA. CRUZ DE TENERIFE
+06	CB	Cantabria	39	S	Cantabria	CANTABRIA
+07	CL	Castilla y León	05	AV	Ávila	AVILA
+07	CL	Castilla y León	09	BU	Burgos	BURGOS
+07	CL	Castilla y León	24	LE	León	LEON
+07	CL	Castilla y León	34	P	Palencia	PALENCIA
+07	CL	Castilla y León	37	SA	Salamanca	SALAMANCA
+07	CL	Castilla y León	40	SG	Segovia	SEGOVIA
+07	CL	Castilla y León	42	SO	Soria	SORIA
+07	CL	Castilla y León	47	VA	Valladolid	VALLADOLID
+07	CL	Castilla y León	49	ZA	Zamora	ZAMORA
+08	CM	Castilla-La Mancha	02	AB	Albacete	ALBACETE
+08	CM	Castilla-La Mancha	13	CR	Ciudad Real	CIUDAD REAL
+08	CM	Castilla-La Mancha	16	CU	Cuenca	CUENCA
+08	CM	Castilla-La Mancha	19	GU	Guadalajara	GUADALAJARA
+08	CM	Castilla-La Mancha	45	TO	Toledo	TOLEDO
+09	CT	Cataluña	08	B	Barcelona	BARCELONA
+09	CT	Cataluña	17	GI	Girona	GIRONA
+09	CT	Cataluña	25	L	Lleida	LLEIDA
+09	CT	Cataluña	43	T	Tarragona	TARRAGONA
+10	VC	Comunitat Valenciana	03	A	Alicante/Alacant	ALICANTE
+10	VC	Comunitat Valenciana	12	CS	Castellón/Castelló	CASTELLON
+10	VC	Comunitat Valenciana	46	V	Valencia/València	VALENCIA
+11	EX	Extremadura	06	BA	Badajoz	BADAJOZ
+11	EX	Extremadura	10	CC	Cáceres	CACERES
+12	GA	Galicia	15	C	Coruña, A	A CORUÑA
+12	GA	Galicia	27	LU	Lugo	LUGO
+12	GA	Galicia	32	OR	Ourense	OURENSE
+12	GA	Galicia	36	PO	Pontevedra	PONTEVEDRA
+13	MD	Madrid, Comunidad de	28	M	Madrid	MADRID
+14	MC	Murcia, Región de	30	MU	Murcia	MURCIA
+15	NC	Navarra, Comunidad Foral de	31	NA	Navarra	NAVARRA
+16	PV	País Vasco	01	VI	Araba/Álava	ARABA/ALAVA
+16	PV	País Vasco	48	BI	Bizkaia	BIZKAIA
+16	PV	País Vasco	20	SS	Gipuzkoa	GIPUZKOA
+17	RI	Rioja, La	26	LO	Rioja, La	LA RIOJA
+18	CE	Ceuta	51	CE	Ceuta	CEUTA
+19	ML	Melilla	52	ML	Melilla	MELILLA
+15	NC	Navarra, Comunidad Foral de	31	NC	Navarra (CA)	NAVARRA (CA)
+07	CL	Castilla y León	40	CL	Castilla y León (CA)	CASTILLA Y LEÓN (CA)
