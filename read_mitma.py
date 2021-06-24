@@ -2,7 +2,7 @@
 # https://opendata-movilidad.mitma.es/maestra1-mitma-distritos/ficheros-diarios/2020-02/20200221_maestra_1_mitma_distrito.txt.gz
 
 # %%
-from numpy.lib.arraysetops import isin
+## Libraries ----
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -10,6 +10,7 @@ import helpers
 from joblib import dump, load
 
 # %%
+## Download from `mitma` ----
 # url = 'https://opendata-movilidad.mitma.es/maestra1-mitma-municipios/ficheros-diarios/2020-02/20200221_maestra_1_mitma_municipio.txt.gz'
 # url = 'https://opendata-movilidad.mitma.es/maestra1-mitma-distritos/ficheros-diarios/2020-02/20200221_maestra_1_mitma_distrito.txt.gz'
 # df = pd.read_csv(url, sep='|', decimal='.', parse_dates=['fecha'])
@@ -34,6 +35,7 @@ def read_mitma(date, detail='municipio'):
     return df
 
 # %%
+## Loop ----
 # https://stackoverflow.com/questions/993358/creating-a-range-of-dates-in-python
 # https://stackoverflow.com/a/26583750/3780957
 
@@ -69,36 +71,37 @@ for idx, date in pd.DataFrame(dates_all).iterrows():
     # Temporary store
     if idx % 10 == 0:
         print('Store', idx)
-        # dump(df_aggregate, 'storage/df_aggregate.joblib') 
+        # dump(df_aggregate, 'storage/df_temp_mitma.joblib') 
 
 # Final store
-# dump(df_aggregate, 'storage/df_aggregate.joblib')
+# dump(df_aggregate, 'storage/df_temp_mitma.joblib')
 
 # %%
-# df3 = df2.reset_index().merge(postal_codes.add_prefix('origen_'), left_on='origen_', right_on='origen_municipio_mitma')
-# df3 = df3.merge(postal_codes.add_prefix('destino_'), left_on='destino_', right_on='destino_municipio_mitma')
+## Pivot and prepare ----
+### Big dataframe ----
+df_aggregate = load('storage/df_temp_mitma.joblib')
 
-# %%
-df_aggregate = load('storage/df_aggregate.joblib')
+### Province information ----
+province_code = pd.read_csv('data/Province_Codigo.csv', sep='\t', converters = {'Code comunidad autónoma numérico': str, 'Code provincia numérico': str}, keep_default_na=False)
+province_code = province_code[['Code provincia numérico', 'Code provincia alpha']].drop_duplicates()
 
-# Source `Madrid`
-# idx = df2['origen_province_']=='28'
+### Merge datasets ----
+df_aggregate = df_aggregate.merge(province_code, left_on='origen_province_', right_on='Code provincia numérico')
+df_aggregate = df_aggregate.merge(province_code, left_on='destino_province_', right_on='Code provincia numérico')
+df_aggregate = df_aggregate.drop(['Code provincia numérico_x', 'Code provincia numérico_y', 'origen_province_', 'destino_province_'], axis=1)
+df_aggregate = df_aggregate.rename(columns={'fecha_': 'fecha', 'Code provincia alpha_x': 'origen_province', 'Code provincia alpha_y': 'destino_province'})
+
+### Pivot ----
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df_pivot = pd.pivot_table(df_aggregate, values=['viajes_sum'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum}, fill_value=0)
-df_pivot.shape
+df_pivot = pd.pivot_table(df_aggregate, values=['viajes_sum'], index=['fecha', 'destino_province'], columns=['origen_province'], aggfunc={'viajes_sum': np.sum}, fill_value=0)
 
-df_pivot.reset_index()['fecha_'].value_counts()
+### Replace column names ----
+columns_ = [x[1] for x in df_pivot.columns.to_flat_index()]
+df_pivot.columns = columns_
+df_pivot = df_pivot.reset_index()
 
 # %%
-postal_codes = pd.read_csv('https://postal.cat/download/postalcat.csv', sep=';', converters = {'cp': str})
-municipio_mitma = pd.read_csv('data/mitma.gob.es/relaciones_municipio_mitma.csv', sep='|', converters = {'municipio': str, 'municipio_mitma': str})
+## Export ----
+dump(df_pivot, 'storage/df_export_mitma.joblib') 
 
-# Remove the _AM
-municipio_mitma['municipio_mitma_simple'] = municipio_mitma['municipio_mitma'].apply(lambda x: x.replace("_AM", ""))
-
-# Keep one per `mitma`
-municipio_mitma = municipio_mitma[['municipio_mitma', 'municipio_mitma_simple']].drop_duplicates()
-
-postal_codes = postal_codes[['cp', 'provincia']].drop_duplicates()
-postal_codes = postal_codes.merge(municipio_mitma, left_on='cp', right_on='municipio_mitma_simple')
-postal_codes = postal_codes[['municipio_mitma', 'cp', 'provincia']]
+# %%
