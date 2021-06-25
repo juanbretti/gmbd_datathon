@@ -15,13 +15,8 @@ from sklearn.preprocessing import StandardScaler
 # Plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import plot_confusion_matrix
-import seaborn as sns
 
 # Model
-from sklearn.ensemble import IsolationForest
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score
 import xgboost as xgb
 from skopt import BayesSearchCV
 from sklearn.ensemble import RandomForestRegressor
@@ -29,7 +24,6 @@ from sklearn import metrics
 
 # Linear model
 import statsmodels.api as sm
-
 
 # %%
 ## Read dataframes ----
@@ -178,15 +172,15 @@ y_test_pred = rfr.predict(X_test)
 
 # %%
 ### Metrics ----
-print('** Train **')
-print(f'Parson R2: {metrics.r2_score(y_train, y_train_pred)}')
-print(f'Mean Squared Error: {metrics.mean_squared_error(y_train, y_train_pred)}')
-print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_train, y_train_pred)}')
+def metrics_custom(y_train, y_train_pred):
+    print(f'Parson R2: {metrics.r2_score(y_train, y_train_pred)}')
+    print(f'Mean Squared Error: {metrics.mean_squared_error(y_train, y_train_pred)}')
+    print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_train, y_train_pred)}')
 
-print('** Test **')
-print(f'Parson R2: {metrics.r2_score(y_test, y_test_pred)}')
-print(f'Mean Squared Error: {metrics.mean_squared_error(y_test, y_test_pred)}')
-print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_test, y_test_pred)}')
+print('** Train **')
+metrics_custom(y_train, y_train_pred)
+print('\n** Test **')
+metrics_custom(y_test, y_test_pred)
 
 # %%
 ## Feature importance ----
@@ -203,16 +197,11 @@ shap_values = explainer.shap_values(X_test)
 shap.summary_plot(shap_values, X_test, plot_type="bar")
 
 # %%
-
-# %%
-# TODO: lag 7, 14 para todas
-# TODO: Variables de pandemia, tienen que tener lag
 # TODO: falta el censo
 # TODO: faltan las vacunas
 # TODO: MOdelo lineal
-# TODO: Correlation
-# https://gist.github.com/aigera2007/567a6d34cefb30c7c6255c20e40f24fb/raw/9c9cb058d1e00533b7dd9dc8f0fd9d3ad03caabb/corr_matrix.py
+# TODO: hacer un standardscaler
+# TODO: Correlation, https://gist.github.com/aigera2007/567a6d34cefb30c7c6255c20e40f24fb/raw/9c9cb058d1e00533b7dd9dc8f0fd9d3ad03caabb/corr_matrix.py
 # TODO: SHAP 
 # https://towardsdatascience.com/explain-any-models-with-the-shap-values-use-the-kernelexplainer-79de9464897a
 # https://aigerimshopenova.medium.com/random-forest-classifier-and-shap-how-to-understand-your-customers-and-interpret-a-black-box-model-6166d86820d9
-# TODO: hacer un standardscaler
