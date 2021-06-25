@@ -60,8 +60,8 @@ for idx, date in pd.DataFrame(dates_all).iterrows():
         df2 = df1.groupby(['fecha', 'origen_province', 'destino_province']).agg({'viajes': ['sum', 'mean', 'std', 'min', 'max'], 'viajes_km': ['sum', 'mean', 'std', 'min', 'max']})
 
         # Change columns name
+        df2.columns = ['__'.join(x) for x in df2.columns.to_flat_index()]
         df2 = df2.reset_index()
-        df2.columns = ['_'.join(x) for x in df2.columns.to_flat_index()]
 
         # Append
         df_aggregate = df_aggregate.append(df2, ignore_index=True)
@@ -82,18 +82,18 @@ for idx, date in pd.DataFrame(dates_all).iterrows():
 df_aggregate = load('storage/df_temp_mitma.joblib')
 
 ### Province information ----
-province_code = pd.read_csv('data/Province_Codigo.csv', sep='\t', converters = {'Code comunidad autónoma numérico': str, 'Code provincia numérico': str}, keep_default_na=False)
+province_code = helpers.province_code()
 province_code = province_code[['Code provincia numérico', 'Code provincia alpha']].drop_duplicates()
 
 ### Merge datasets ----
-df_aggregate = df_aggregate.merge(province_code, left_on='origen_province_', right_on='Code provincia numérico')
-df_aggregate = df_aggregate.merge(province_code, left_on='destino_province_', right_on='Code provincia numérico')
-df_aggregate = df_aggregate.drop(['Code provincia numérico_x', 'Code provincia numérico_y', 'origen_province_', 'destino_province_'], axis=1)
-df_aggregate = df_aggregate.rename(columns={'fecha_': 'fecha', 'Code provincia alpha_x': 'origen_province', 'Code provincia alpha_y': 'destino_province'})
+df_aggregate = df_aggregate.merge(province_code, left_on='origen_province', right_on='Code provincia numérico')
+df_aggregate = df_aggregate.merge(province_code, left_on='destino_province', right_on='Code provincia numérico')
+df_aggregate = df_aggregate.drop(['Code provincia numérico_x', 'Code provincia numérico_y', 'origen_province', 'destino_province'], axis=1)
+df_aggregate = df_aggregate.rename(columns={'Code provincia alpha_x': 'origen_province', 'Code provincia alpha_y': 'destino_province'})
 
 ### Pivot ----
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df_pivot = pd.pivot_table(df_aggregate, values=['viajes_sum'], index=['fecha', 'destino_province'], columns=['origen_province'], aggfunc={'viajes_sum': np.sum}, fill_value=0)
+df_pivot = pd.pivot_table(df_aggregate, values=['viajes__sum'], index=['fecha', 'destino_province'], columns=['origen_province'], aggfunc={'viajes__sum': np.sum}, fill_value=0)
 
 ### Replace column names ----
 columns_ = [x[1] for x in df_pivot.columns.to_flat_index()]

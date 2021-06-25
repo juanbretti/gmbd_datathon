@@ -20,3 +20,8 @@ def shift_timeseries_by_lags(df, fix_columns, lag_numbers, lag_label='lag'):
 # df.columns.to_flat_index()
 
 # %%
+def province_code():
+    df = pd.read_csv('data/Province_Codigo.csv', sep='\t', converters = {'Code comunidad autónoma numérico': str, 'Code provincia numérico': str}, keep_default_na=False)
+    return df
+
+#%%
