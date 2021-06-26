@@ -17,12 +17,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Model
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+# More model
 import xgboost as xgb
 from skopt import BayesSearchCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn import metrics
-
-# Linear model
 import statsmodels.api as sm
 
 # %%
@@ -164,23 +164,35 @@ y_test = df_test['uci_defun__num_def']
 
 # %%
 ## Model training ----
-### Quick model ----
+### RandomForestRegressor ----
+from sklearn.ensemble import RandomForestRegressor
 rfr = RandomForestRegressor(random_state=SEED, max_features='auto', n_estimators=1000, n_jobs=-1)
 rfr.fit(X_train, y_train)
 y_train_pred = rfr.predict(X_train)
 y_test_pred = rfr.predict(X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+
+# %%
+### SVM ----
+from sklearn.svm import SVR
+regr = make_pipeline(StandardScaler(), SVR(kernel='linear'))
+regr.fit(X_train, y_train)
+y_train_pred = regr.predict(X_train)
+y_test_pred = regr.predict(X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+
+# %%
+### LinearRegression ----
+from sklearn.linear_model import LinearRegression
+regr = make_pipeline(StandardScaler(), LinearRegression(n_jobs=-1))
+regr.fit(X_train, y_train)
+y_train_pred = regr.predict(X_train)
+y_test_pred = regr.predict(X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
 ### Metrics ----
-def metrics_custom(y_train, y_train_pred):
-    print(f'Parson R2: {metrics.r2_score(y_train, y_train_pred)}')
-    print(f'Mean Squared Error: {metrics.mean_squared_error(y_train, y_train_pred)}')
-    print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_train, y_train_pred)}')
-
-print('** Train **')
-metrics_custom(y_train, y_train_pred)
-print('\n** Test **')
-metrics_custom(y_test, y_test_pred)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
 ## Feature importance ----

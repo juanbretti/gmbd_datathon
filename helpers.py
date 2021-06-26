@@ -1,5 +1,6 @@
 # %%
 import pandas as pd
+from sklearn import metrics
 
 # %%
 # https://stackoverflow.com/a/40941603/3780957
@@ -34,3 +35,17 @@ def timer(start_time=None):
         thour, temp_sec = divmod((datetime.now() - start_time).total_seconds(), 3600)
         tmin, tsec = divmod(temp_sec, 60)
         print('\n Time taken: %i hours %i minutes and %s seconds.' % (thour, tmin, round(tsec, 2)))
+
+# %%
+def metrics_custom(y_train, y_train_pred):
+    print(f'Parson R2: {metrics.r2_score(y_train, y_train_pred)}')
+    print(f'Mean Squared Error: {metrics.mean_squared_error(y_train, y_train_pred)}')
+    print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_train, y_train_pred)}')
+
+def metrics_custom2(y_train, y_train_pred, y_test, y_test_pred):
+    print('** Train **')
+    metrics_custom(y_train, y_train_pred)
+    print('\n** Test **')
+    metrics_custom(y_test, y_test_pred)
+
+# %%
