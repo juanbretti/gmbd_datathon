@@ -227,13 +227,6 @@ y_test_pred = regr.predict(X_test)
 helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
-## Feature importance ----
-### Standard plot ----
-# https://stackoverflow.com/a/51520906/3780957
-feat_importances = pd.Series(rfr.feature_importances_, index=X_train.columns)
-feat_importances.nlargest(20).plot(kind='barh').invert_yaxis()
-
-# %%
 ## SequentialFeatureSelector ----
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.ensemble import RandomForestRegressor
@@ -249,26 +242,41 @@ tss = TimeSeriesSplit(n_splits=3, test_size=PREDICTION_WINDOW)
 # https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 # https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
 # sfs = SequentialFeatureSelector(rfr, n_features_to_select=20, n_jobs=-1, scoring='r2', cv=tss)
-sfs = RFECV(rfr, step=20, n_jobs=-1, scoring='r2', cv=tss)
+sfs = RFECV(rfr, step=50, n_jobs=-1, scoring='r2', cv=tss)
 
 start_time = helpers.timer(None)
 sfs.fit(X_train, y_train)
 helpers.timer(start_time)
 
 # %%
+### Metric calculation ----
 y_train_pred = sfs.predict(X_train)
 y_test_pred = sfs.predict(X_test)
 helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
-pd.Series(sfs.support_).value_counts()
+# Number of features
+sfs.n_features_
+
+# %%
+## Feature importance ----
+### Standard plot ----
+# https://stackoverflow.com/a/51520906/3780957
+feat_importances = pd.Series(sfs.estimator_.feature_importances_, index=X_train.columns[sfs.support_])
+feat_importances.nlargest(20).plot(kind='barh').invert_yaxis()
 
 # %%
 ### Shap ----
 import shap
-explainer = shap.TreeExplainer(rfr)
+explainer = shap.TreeExplainer(sfs.estimator_)
 shap_values = explainer.shap_values(X_test)
 shap.summary_plot(shap_values, X_test, plot_type="bar")
+
+# %%
+X_test_shap = X_test.loc[:, sfs.support_]
+explainer = shap.KernelExplainer(sfs.estimator_.predict, X_test_shap)
+shap_values = explainer.shap_values(X_test_shap, approximate=False, check_additivity=False)
+shap.summary_plot(shap_values, X_test_shap)
 
 # %%
 # TODO: Mayor lag
