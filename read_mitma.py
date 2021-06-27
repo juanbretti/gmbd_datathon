@@ -70,10 +70,10 @@ for idx, date in pd.DataFrame(dates_all).iterrows():
     # Temporary store
     if idx % 10 == 0:
         print('Store', idx)
-        # dump(df_aggregate, 'storage/df_temp_mitma.joblib') 
+        dump(df_aggregate, 'storage/df_temp_mitma.joblib') 
 
 # Final store
-# dump(df_aggregate, 'storage/df_temp_mitma.joblib')
+dump(df_aggregate, 'storage/df_temp_mitma.joblib')
 
 # %%
 ## Pivot and prepare ----
@@ -100,7 +100,17 @@ df_pivot.columns = columns_
 df_pivot = df_pivot.reset_index()
 
 # %%
+## Prepare for model ----
+filter_ = df_pivot['destino_province']==helpers.target_province
+df_pivot_filtered = df_pivot[filter_]
+df_pivot_filtered = df_pivot_filtered.drop(columns='destino_province')
+# Complete all the series
+df_pivot_filtered = df_pivot_filtered.set_index('fecha').resample('d').ffill()
+# Flatten column names and remove index
+df_pivot_filtered = df_pivot_filtered.reset_index()
+
+# %%
 ## Export ----
-dump(df_pivot, 'storage/df_export_mitma.joblib') 
+dump(df_pivot_filtered, 'storage/df_export_mitma.joblib') 
 
 # %%

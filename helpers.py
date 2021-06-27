@@ -5,6 +5,7 @@ from sklearn import metrics
 # %%
 start_date = '2020-01-01'
 end_date = '2021-06-26'
+target_province = 'M'
 
 # %%
 # https://stackoverflow.com/a/40941603/3780957

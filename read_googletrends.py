@@ -35,24 +35,22 @@ pytrends = TrendReq(hl='en-US', tz=360)
 start_end_date = f'{helpers.start_date} {helpers.end_date})'
 
 for kw_list in kw_lists:
-  for ca in province_code['Code comunidad autónoma alpha'].unique():
-    geo_ = f'ES-{ca}'
-    while True:
-      try:
-        pytrends.build_payload(kw_list, cat=0, timeframe=start_end_date, geo=geo_, gprop='')
-        df = pytrends.interest_over_time()
-      except:
-        print('retry', kw_list, geo_)
-        continue
-      else:
-        df = df.reset_index()
-        df['geo'] = geo_
-        df['ca'] = ca
-        df = pd.melt(df, id_vars=['date', 'geo', 'ca'], value_vars=kw_list)
-        df_append = df_append.append(df, ignore_index=True)
-        break
-
-# %%
+    for ca in province_code['Code comunidad autónoma alpha'].unique():
+        geo_ = f'ES-{ca}'
+        while True:
+            try:
+                pytrends.build_payload(kw_list, cat=0, timeframe=start_end_date, geo=geo_, gprop='')
+                df = pytrends.interest_over_time()
+            except:
+                print('retry', kw_list, geo_)
+                continue
+            else:
+                df = df.reset_index()
+                df['geo'] = geo_
+                df['ca'] = ca
+                df = pd.melt(df, id_vars=['date', 'geo', 'ca'], value_vars=kw_list)
+                df_append = df_append.append(df, ignore_index=True)
+                break
 
 # %%
 ## Weekly to daily data ----
@@ -75,7 +73,17 @@ df2 = (df1.set_index('date')  # Only can be dates
 df2
 
 # %%
+# df2 = load('storage/df_export_googletrends.joblib')
+
+# %%
+## Prepare for model ----
+df2_pivot = df2.pivot(index=['date'], columns=['ca'])
+# Flatten column names and remove index
+df2_pivot.columns = ['__'.join(x) for x in df2_pivot.columns]
+df2_pivot = df2_pivot.reset_index()
+
+# %%
 ## Export ----
-dump(df2, 'storage/df_export_googletrends.joblib') 
+dump(df2_pivot, 'storage/df_export_googletrends.joblib') 
 
 # %%

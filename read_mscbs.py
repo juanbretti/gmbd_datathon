@@ -134,7 +134,12 @@ df_pivot_zero_diff = replace_columns(df_pivot_zero_diff.set_index('date'), 'dail
 df = pd.concat([df_pivot_zero.set_index('date'), df_pivot_zero_diff.set_index('date')], axis=1)
 
 # %%
+## Prepare for model ----
+# Flatten column names and remove index
+df_reseted = df.reset_index()
+
+# %%
 ## Export ----
-dump(df, 'storage/df_export_mscbs.joblib') 
+dump(df_reseted, 'storage/df_export_mscbs.joblib') 
 
 # %%
