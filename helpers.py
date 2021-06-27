@@ -37,10 +37,10 @@ def timer(start_time=None):
         print('\n Time taken: %i hours %i minutes and %s seconds.' % (thour, tmin, round(tsec, 2)))
 
 # %%
-def metrics_custom(y_train, y_train_pred):
-    print(f'Parson R2: {metrics.r2_score(y_train, y_train_pred)}')
-    print(f'Mean Squared Error: {metrics.mean_squared_error(y_train, y_train_pred)}')
-    print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_train, y_train_pred)}')
+def metrics_custom(y_true, y_pred):
+    print(f'Parson R2: {metrics.r2_score(y_true, y_pred)}')
+    print(f'Mean Squared Error: {metrics.mean_squared_error(y_true, y_pred)}')
+    print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_true, y_pred)}')
 
 def metrics_custom2(y_train, y_train_pred, y_test, y_test_pred):
     print('** Train **')

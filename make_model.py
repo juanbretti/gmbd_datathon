@@ -47,6 +47,7 @@ MAX_LAG = 21
 LAG_PANDEMIC = [1, 7, 14, MAX_LAG]
 LAG_OTHER = [0, 7, 14, MAX_LAG]
 SEED = 42
+PREDICTION_WINDOW = 7
 
 # %%
 ## Prepare dataframes ----
@@ -161,7 +162,7 @@ df_merge = df_merge.reset_index(drop=True)
 split_ = int(df_merge.shape[0]*TRAIN_PERCENTAGE)
 # Split
 df_train = df_merge.iloc[MAX_LAG:split_, :]
-df_test = df_merge.iloc[split_:(split_+7), :]
+df_test = df_merge.iloc[split_:(split_+PREDICTION_WINDOW), :]
 
 # X and y split
 X_train = df_train.drop(columns='uci_defun__num_def')
@@ -204,6 +205,34 @@ helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 # https://stackoverflow.com/a/51520906/3780957
 feat_importances = pd.Series(rfr.feature_importances_, index=X_train.columns)
 feat_importances.nlargest(20).plot(kind='barh').invert_yaxis()
+
+# %%
+## SequentialFeatureSelector ----
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.feature_selection import RFECV
+
+# Build the model
+rfr = RandomForestRegressor(random_state=SEED, max_features='auto', n_estimators=100, n_jobs=-1)
+tss = TimeSeriesSplit(n_splits=10, test_size=PREDICTION_WINDOW)
+
+# Documentation
+# https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html
+# https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
+# https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
+# sfs = SequentialFeatureSelector(rfr, n_features_to_select=20, n_jobs=-1, scoring='r2', cv=tss)
+sfs = RFECV(rfr, step=10, n_jobs=-1, scoring='r2', cv=tss)
+
+start_time = helpers.timer(None)
+sfs.fit(X_train, y_train)
+helpers.timer(start_time)
+
+# %%
+y_train_pred = sfs.predict(X_train)
+y_test_pred = sfs.predict(X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+
 
 # %%
 ### Shap ----
