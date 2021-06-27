@@ -8,7 +8,7 @@
 from numpy.lib.histograms import histogram
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import helpers
 from joblib import dump, load
 
@@ -21,12 +21,12 @@ def read_mscbs(date):
     df = pd.read_excel(url, engine='odf', sheet_name=None)
     return df
 
-tt = read_mscbs(datetime(2021,6,25))
+# tt = read_mscbs(datetime(2021,6,25))
 
 # %%
 ## Loop ----
-date_start = '2020-02-21'
-date_end = '2021-06-30'
+date_start = helpers.start_date
+date_end = helpers.end_date
 dates_all = pd.date_range(date_start, date_end)
 
 # %%
@@ -61,18 +61,18 @@ dump(df_aggregate_sheet_name, 'storage/df_temp_mscbs_sheet_name.joblib')
 
 # %%
 ## Exploration ----
-df_aggregate_sheet_name['sheet_names'].value_counts()
+# df_aggregate_sheet_name['sheet_names'].value_counts()
 
-df_aggregate['Unnamed: 0'].isna().value_counts()
-df_aggregate['Dosis administradas (2)'].isna().value_counts()
-df_aggregate.isna().sum()
+# df_aggregate['Unnamed: 0'].isna().value_counts()
+# df_aggregate['Dosis administradas (2)'].isna().value_counts()
+# df_aggregate.isna().sum()
 
-df_aggregate['Unnamed: 0'].value_counts()
+# df_aggregate['Unnamed: 0'].value_counts()
 
-df_aggregate['Dosis administradas (2)'].hist()
-df_aggregate['Dosis administradas (2)'].describe()
+# df_aggregate['Dosis administradas (2)'].hist()
+# df_aggregate['Dosis administradas (2)'].describe()
 
-df_aggregate['date'].value_counts()
+# df_aggregate['date'].value_counts()
 
 # %%
 ## Pivot and prepare ----
@@ -96,16 +96,29 @@ df_pivot = pd.pivot_table(df_aggregate, values=['Dosis administradas (2)'], inde
 df_pivot = df_pivot.resample('d').ffill().reset_index()
 df_pivot = df_pivot.set_index('date')
 
+# %%
+### Create the `zero` dataframe
+date_start = helpers.start_date
+date_end = df_pivot.index.min() - timedelta(days=1)
+dates_all = pd.date_range(date_start, date_end)
+
+# Create a DataFrame with zeros
+df_zero = pd.DataFrame(0, index=dates_all, columns=df_pivot.columns)
+df_zero.index.name = 'date'
+# Concatenate the zeros and the previous pivot
+df_pivot_zero = pd.concat([df_zero, df_pivot], axis=0)
+
+# %%
 # https://stackoverflow.com/a/59383020/3780957
 # Daily dosis
-df_pivot_diff = df_pivot.diff()
-df_pivot_diff['date_diff'] = df_pivot_diff.index.to_series().diff().dt.days
+df_pivot_zero_diff = df_pivot_zero.diff()
+df_pivot_zero_diff['date_diff'] = df_pivot_zero_diff.index.to_series().diff().dt.days
 # Make daily values
-df_pivot_diff = df_pivot_diff.apply(lambda x: x/df_pivot_diff['date_diff'])
-df_pivot_diff = df_pivot_diff.drop(columns='date_diff')
+df_pivot_zero_diff = df_pivot_zero_diff.apply(lambda x: x/df_pivot_zero_diff['date_diff'])
+df_pivot_zero_diff = df_pivot_zero_diff.drop(columns='date_diff')
 # Complete the time series
-df_pivot_diff = df_pivot_diff.resample('d').ffill().reset_index()
-# df_pivot_diff = df_pivot_diff.dropna()
+df_pivot_zero_diff = df_pivot_zero_diff.iloc[1:,].resample('d').ffill().reset_index()
+# df_pivot_zero_diff = df_pivot_zero_diff.dropna()
 
 ### Replace column names ----
 def replace_columns(df, prefix):
@@ -113,12 +126,12 @@ def replace_columns(df, prefix):
     df.columns = columns_
     return df.reset_index()
 
-df_pivot = replace_columns(df_pivot, 'cumulative')
-df_pivot_diff = replace_columns(df_pivot_diff.set_index('date'), 'daily')
+df_pivot_zero = replace_columns(df_pivot_zero, 'cumulative')
+df_pivot_zero_diff = replace_columns(df_pivot_zero_diff.set_index('date'), 'daily')
 
 # %%
 ### Concatenate the two tables ----
-df = pd.concat([df_pivot.set_index('date'), df_pivot_diff.set_index('date')], axis=1)
+df = pd.concat([df_pivot_zero.set_index('date'), df_pivot_zero_diff.set_index('date')], axis=1)
 
 # %%
 ## Export ----

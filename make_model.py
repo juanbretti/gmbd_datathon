@@ -61,13 +61,15 @@ df_casos_uci_num_defunciones = df_casos_uci_num_defunciones.add_prefix('uci_defu
 # %%
 ### Death age groups ----
 # Merge groups
-df_casos_uci['grupo_edad_merged'] = df_casos_uci['grupo_edad'].replace({'0-9': '0-59', '10-19': '0-59', '20-29': '0-59', '30-39': '0-59', '40-49': '0-59', '50-59': '0-59', 'NC': '0-59'})
+df_casos_uci['grupo_edad_merged'] = df_casos_uci['grupo_edad'].replace({'0-9': '0-59', '10-19': '0-59', '20-29': '0-59', '30-39': '0-59', '40-49': '0-59', '50-59': '0-59'})
 # Testing groups sizes
-df_casos_uci.groupby('grupo_edad_merged').sum()
+# df_casos_uci.groupby('grupo_edad_merged').sum()
 # Merge CA information
 df_casos_uci = df_casos_uci.merge(province_code, left_on='provincia_iso', right_on='Code provincia alpha')
 # Pivot per CA
 df_casos_uci_age = pd.pivot_table(df_casos_uci, index=['fecha'], columns=['Code comunidad autónoma alpha', 'grupo_edad_merged'], values=['num_hosp', 'num_uci', 'num_def'], aggfunc=np.sum, fill_value=0)
+# Complete all the series
+df_casos_uci_age = df_casos_uci_age.resample('d').ffill()
 # Flatten column names and remove index
 df_casos_uci_age.columns = ['__'.join(x) for x in df_casos_uci_age.columns]
 df_casos_uci_age = df_casos_uci_age.reset_index()
@@ -79,9 +81,12 @@ df_casos_uci_age_lagged = df_casos_uci_age_lagged.add_prefix('uci_age__')
 ### Cases tested ----
 df_casos_pruebas = df_casos.merge(province_code, left_on='provincia_iso', right_on='Code provincia alpha')
 df_casos_pruebas = pd.pivot_table(df_casos_pruebas, index=['fecha'], columns=['Code comunidad autónoma alpha'], values=['num_casos_prueba_pcr', 'num_casos_prueba_test_ac', 'num_casos_prueba_ag', 'num_casos_prueba_elisa', 'num_casos_prueba_desconocida'], aggfunc=np.sum, fill_value=0)
-
+# Complete all the series
+df_casos_pruebas = df_casos_pruebas.resample('d').ffill()
+# Flatten column names and remove index
 df_casos_pruebas.columns = ['__'.join(x) for x in df_casos_pruebas.columns]
 df_casos_pruebas = df_casos_pruebas.reset_index()
+# Time shifting
 df_casos_pruebas_lagged = helpers.shift_timeseries_by_lags(df_casos_pruebas, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
 df_casos_pruebas_lagged = df_casos_pruebas_lagged.add_prefix('tests__')
 
@@ -92,9 +97,12 @@ df_aemet_pivot = df_aemet_pivot.reset_index()
 df_aemet_pivot.columns = [x[0] for x in df_aemet_pivot.columns]
 df_aemet_pivot = df_aemet_pivot.merge(province_code, on='Code provincia alpha')
 df_aemet_pivot = pd.pivot_table(df_aemet_pivot, index=['fecha'], columns=['Code comunidad autónoma alpha'], values=['tmed'], aggfunc=np.sum, fill_value=0)
-
+# Complete all the series
+df_aemet_pivot = df_aemet_pivot.resample('d').ffill()
+# Flatten column names and remove index
 df_aemet_pivot.columns = ['__'.join(x) for x in df_aemet_pivot.columns]
 df_aemet_pivot = df_aemet_pivot.reset_index()
+# Time shifting
 df_aemet_pivot_lagged = helpers.shift_timeseries_by_lags(df_aemet_pivot, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
 df_aemet_pivot_lagged = df_aemet_pivot_lagged.add_prefix('aemet__')
 
@@ -102,9 +110,10 @@ df_aemet_pivot_lagged = df_aemet_pivot_lagged.add_prefix('aemet__')
 ### Google Trends ----
 df_googletrends_pivot = df_googletrends
 df_googletrends_pivot = df_googletrends_pivot.pivot(index=['date'], columns=['ca'])
-
+# Flatten column names and remove index
 df_googletrends_pivot.columns = ['__'.join(x) for x in df_googletrends_pivot.columns]
 df_googletrends_pivot = df_googletrends_pivot.reset_index()
+# Time shifting
 df_googletrends_pivot_lagged = helpers.shift_timeseries_by_lags(df_googletrends_pivot, fix_columns=['date'], lag_numbers=LAG_OTHER)
 df_googletrends_pivot_lagged = df_googletrends_pivot_lagged.add_prefix('google_trends__')
 
@@ -113,12 +122,20 @@ df_googletrends_pivot_lagged = df_googletrends_pivot_lagged.add_prefix('google_t
 filter_ = df_mitma['destino_province']==TARGET_PROVINCE
 df_mitma_filtered = df_mitma[filter_]
 df_mitma_filtered = df_mitma_filtered.drop(columns='destino_province')
+# Complete all the series
+df_mitma_filtered = df_mitma_filtered.set_index('fecha').resample('d').ffill()
+# Flatten column names and remove index
+df_mitma_filtered = df_mitma_filtered.reset_index()
+# Time shifting
 df_mitma_filtered_lagged = helpers.shift_timeseries_by_lags(df_mitma_filtered, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
 df_mitma_filtered_lagged = df_mitma_filtered_lagged.add_prefix('mitma__')
 
 # %%
 ### Vaccination in Spain (`mscbs`) ----
-df_mscbs_lagged = df_mscbs.reset_index()
+df_mscbs_lagged = df_mscbs
+# Flatten column names and remove index
+df_mscbs_lagged = df_mscbs_lagged.reset_index()
+# Time shifting
 df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs_lagged, fix_columns=['date'], lag_numbers=LAG_OTHER)
 df_mscbs_lagged = df_mscbs_lagged.add_prefix('mscbs__')
 
@@ -145,6 +162,15 @@ df_merge = df_merge.fillna(df_merge.mean(numeric_only=True))
 # df_merge.isnull().sum().values.sum()
 
 # %%
+# # Exploratory
+# df_casos_uci_age_lagged['uci_age__fecha'].describe()
+# df_casos_pruebas_lagged['tests__fecha'].describe()
+# df_aemet_pivot_lagged['aemet__fecha'].describe()
+# df_googletrends_pivot_lagged['google_trends__date'].describe()
+# df_mitma_filtered_lagged['mitma__fecha'].describe()  # Defines the start_date
+# df_mscbs_lagged['mscbs__date'].describe()
+
+# %%
 ## Feature engineering ----
 ### Dates ----
 df_merge['fecha_year'] = df_merge['fecha'].dt.year
@@ -159,7 +185,8 @@ df_merge = df_merge.drop(columns=['fecha'])
 ## Split dataset ----
 df_merge = df_merge.reset_index(drop=True)
 # 90% for the training
-split_ = int(df_merge.shape[0]*TRAIN_PERCENTAGE)
+# split_ = int(df_merge.shape[0]*TRAIN_PERCENTAGE)
+split_ = df_merge.shape[0]-PREDICTION_WINDOW
 # Split
 df_train = df_merge.iloc[MAX_LAG:split_, :]
 df_test = df_merge.iloc[split_:(split_+PREDICTION_WINDOW), :]
@@ -214,15 +241,15 @@ from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.feature_selection import RFECV
 
 # Build the model
-rfr = RandomForestRegressor(random_state=SEED, max_features='auto', n_estimators=100, n_jobs=-1)
-tss = TimeSeriesSplit(n_splits=10, test_size=PREDICTION_WINDOW)
+rfr = RandomForestRegressor(random_state=SEED, max_features=None, n_estimators=100, n_jobs=-1)
+tss = TimeSeriesSplit(n_splits=3, test_size=PREDICTION_WINDOW)
 
 # Documentation
 # https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html
 # https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 # https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
 # sfs = SequentialFeatureSelector(rfr, n_features_to_select=20, n_jobs=-1, scoring='r2', cv=tss)
-sfs = RFECV(rfr, step=10, n_jobs=-1, scoring='r2', cv=tss)
+sfs = RFECV(rfr, step=20, n_jobs=-1, scoring='r2', cv=tss)
 
 start_time = helpers.timer(None)
 sfs.fit(X_train, y_train)
@@ -233,6 +260,8 @@ y_train_pred = sfs.predict(X_train)
 y_test_pred = sfs.predict(X_test)
 helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
+# %%
+pd.Series(sfs.support_).value_counts()
 
 # %%
 ### Shap ----
@@ -242,7 +271,6 @@ shap_values = explainer.shap_values(X_test)
 shap.summary_plot(shap_values, X_test, plot_type="bar")
 
 # %%
-# TODO: Feature selection
 # TODO: Mayor lag
 # TODO: falta el censo
 # TODO: Correlation, https://gist.github.com/aigera2007/567a6d34cefb30c7c6255c20e40f24fb/raw/9c9cb058d1e00533b7dd9dc8f0fd9d3ad03caabb/corr_matrix.py

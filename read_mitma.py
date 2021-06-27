@@ -39,9 +39,8 @@ def read_mitma(date, detail='municipio'):
 # https://stackoverflow.com/questions/993358/creating-a-range-of-dates-in-python
 # https://stackoverflow.com/a/26583750/3780957
 
-date_start = '2020-02-21'
-date_end = '2021-05-09'
-# date_end = '2020-03-10'
+date_start = helpers.start_date
+date_end = helpers.end_date
 dates_all = pd.date_range(date_start, date_end)
 
 # %%

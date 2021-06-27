@@ -31,12 +31,15 @@ kw_lists = [["coronavirus", "covid", "confinamiento", "vacuna"],
 df_append = pd.DataFrame()
 pytrends = TrendReq(hl='en-US', tz=360)  
 
+# start_end_date = '2020-01-01 2021-06-23'
+start_end_date = f'{helpers.start_date} {helpers.end_date})'
+
 for kw_list in kw_lists:
   for ca in province_code['Code comunidad autónoma alpha'].unique():
     geo_ = f'ES-{ca}'
     while True:
       try:
-        pytrends.build_payload(kw_list, cat=0, timeframe='2020-01-01 2021-06-23', geo=geo_, gprop='')
+        pytrends.build_payload(kw_list, cat=0, timeframe=start_end_date, geo=geo_, gprop='')
         df = pytrends.interest_over_time()
       except:
         print('retry', kw_list, geo_)
