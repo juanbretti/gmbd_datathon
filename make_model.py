@@ -32,6 +32,7 @@ df_casos = load('storage/df_export_casos.joblib')
 df_aemet = load('storage/df_export_aemet.joblib')
 df_googletrends = load('storage/df_export_googletrends.joblib')
 df_mitma = load('storage/df_export_mitma.joblib')
+df_mscbs = load('storage/df_export_mscbs.joblib')
 
 ### Province ----
 province_code = helpers.province_code()
@@ -115,6 +116,12 @@ df_mitma_filtered_lagged = helpers.shift_timeseries_by_lags(df_mitma_filtered, f
 df_mitma_filtered_lagged = df_mitma_filtered_lagged.add_prefix('mitma__')
 
 # %%
+### Vaccination in Spain (`mscbs`) ----
+df_mscbs_lagged = df_mscbs.reset_index()
+df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs_lagged, fix_columns=['date'], lag_numbers=LAG_OTHER)
+df_mscbs_lagged = df_mscbs_lagged.add_prefix('mscbs__')
+
+# %%
 ## Merge all datasources ----
 df_merge = df_casos_uci_num_defunciones.copy()
 df_merge = df_merge.rename({'uci_defun__fecha': 'fecha'}, axis=1)
@@ -129,9 +136,10 @@ df_merge = merge_df_to_add(df_merge, df_casos_pruebas_lagged, 'tests__fecha')
 df_merge = merge_df_to_add(df_merge, df_aemet_pivot_lagged, 'aemet__fecha')
 df_merge = merge_df_to_add(df_merge, df_googletrends_pivot_lagged, 'google_trends__date')
 df_merge = merge_df_to_add(df_merge, df_mitma_filtered_lagged, 'mitma__fecha')
+df_merge = merge_df_to_add(df_merge, df_mscbs_lagged, 'mscbs__date')
 
 # Fill `na` because of the `outer`
-df_merge = df_merge.fillna(df_merge.mean())
+df_merge = df_merge.fillna(df_merge.mean(numeric_only=True))
 # Check for `nan` or `null`
 # df_merge.isnull().sum().values.sum()
 
@@ -191,10 +199,6 @@ y_test_pred = regr.predict(X_test)
 helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
-### Metrics ----
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
-
-# %%
 ## Feature importance ----
 ### Standard plot ----
 # https://stackoverflow.com/a/51520906/3780957
@@ -209,11 +213,11 @@ shap_values = explainer.shap_values(X_test)
 shap.summary_plot(shap_values, X_test, plot_type="bar")
 
 # %%
+# TODO: Feature selection
+# TODO: Mayor lag
 # TODO: falta el censo
-# TODO: faltan las vacunas
-# TODO: MOdelo lineal
-# TODO: hacer un standardscaler
 # TODO: Correlation, https://gist.github.com/aigera2007/567a6d34cefb30c7c6255c20e40f24fb/raw/9c9cb058d1e00533b7dd9dc8f0fd9d3ad03caabb/corr_matrix.py
 # TODO: SHAP 
 # https://towardsdatascience.com/explain-any-models-with-the-shap-values-use-the-kernelexplainer-79de9464897a
 # https://aigerimshopenova.medium.com/random-forest-classifier-and-shap-how-to-understand-your-customers-and-interpret-a-black-box-model-6166d86820d9
+# TODO: LTSM

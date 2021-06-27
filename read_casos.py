@@ -15,8 +15,3 @@ dump(province_cases, 'storage/df_export_casos.joblib')
 dump(province_cases_uci, 'storage/df_export_casos_uci.joblib') 
 
 # %%
-helpers.shift_timeseries_by_lags(df_province_cases, 
-    fix_columns=['provincia_iso', 'fecha', 'Code comunidad autónoma numérico', 'Comunidad Autónoma', 'Code provincia numérico', 'Provincia', 'Code', 'aemet'], 
-    lag_numbers=[0,1,2,3])
-
-# %^%
