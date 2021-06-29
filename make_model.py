@@ -40,6 +40,7 @@ TRAIN_PERCENTAGE = 0.9
 MAX_LAG = 21
 LAG_PANDEMIC = [1, 7, 14, MAX_LAG]
 LAG_OTHER = [0, 7, 14, MAX_LAG]
+LAG_PCT_CHANGE = [7, 14]
 SEED = 42
 PREDICTION_WINDOW = 7
 
@@ -68,23 +69,29 @@ df_casos_uci_age = df_casos_uci_age.resample('d').ffill()
 df_casos_uci_age.columns = ['__'.join(x) for x in df_casos_uci_age.columns]
 df_casos_uci_age = df_casos_uci_age.reset_index()
 # Time shifting, minimum has to be `1`
+# df_casos_uci_age_lagged = helpers.pct_change_by_lags(df_casos_uci_age, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
 df_casos_uci_age_lagged = helpers.shift_timeseries_by_lags(df_casos_uci_age, fix_columns=['fecha'], lag_numbers=LAG_PANDEMIC)
 df_casos_uci_age_lagged = df_casos_uci_age_lagged.add_prefix('uci_age__')
 
 # %%
 ### Cases tested ----
+# df_casos_lagged = helpers.pct_change_by_lags(df_casos, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
 df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
 df_casos_lagged = df_casos_lagged.add_prefix('tests__')
 ### AEMET temperature ----
+# df_aemet_lagged = helpers.pct_change_by_lags(df_aemet, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
 df_aemet_lagged = helpers.shift_timeseries_by_lags(df_aemet, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
 df_aemet_lagged = df_aemet_lagged.add_prefix('aemet__')
 ### Google Trends ----
+# df_googletrends_lagged = helpers.pct_change_by_lags(df_googletrends, fix_columns=['date'], lag_numbers=LAG_PCT_CHANGE)
 df_googletrends_lagged = helpers.shift_timeseries_by_lags(df_googletrends, fix_columns=['date'], lag_numbers=LAG_OTHER)
 df_googletrends_lagged = df_googletrends_lagged.add_prefix('google_trends__')
 ### Movements to Madrid (`mitma`) ----
+# df_mitma_lagged = helpers.pct_change_by_lags(df_mitma, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
 df_mitma_lagged = helpers.shift_timeseries_by_lags(df_mitma, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
 df_mitma_lagged = df_mitma_lagged.add_prefix('mitma__')
 ### Vaccination in Spain (`mscbs`) ----
+# df_mscbs_lagged = helpers.pct_change_by_lags(df_mscbs, fix_columns=['date'], lag_numbers=LAG_PCT_CHANGE)
 df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs, fix_columns=['date'], lag_numbers=LAG_OTHER)
 df_mscbs_lagged = df_mscbs_lagged.add_prefix('mscbs__')
 
@@ -105,13 +112,23 @@ df_merge = merge_df_to_add(df_merge, df_googletrends_lagged, 'google_trends__dat
 df_merge = merge_df_to_add(df_merge, df_mitma_lagged, 'mitma__fecha')
 df_merge = merge_df_to_add(df_merge, df_mscbs_lagged, 'mscbs__date')
 
+# Replace `Inf`
+# df_merge = df_merge.replace([np.inf, -np.inf], np.nan)
+
 # Check for `nan` or `null`
-# df_merge.isnull().sum().values.sum()
+# df_merge.isna().sum().sum()
 # Fill `na` because of the `outer`
 df_merge = df_merge.fillna(df_merge.mean(numeric_only=True))
+# What cannot be filled by the `mean`, is filled by `0` 
+# df_merge = df_merge.fillna(0)
 
 # %%
 ## Feature engineering ----
+### Filter only vaccination times
+idx_filter = df_merge['fecha'] >= helpers.start_date_vaccination
+idx_filter.value_counts()
+df_merge = df_merge.loc[idx_filter]
+
 ### Dates ----
 df_merge['fecha_year'] = df_merge['fecha'].dt.year
 df_merge['fecha_month'] = df_merge['fecha'].dt.month

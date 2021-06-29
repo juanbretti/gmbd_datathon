@@ -4,6 +4,7 @@ from sklearn import metrics
 
 # %%
 start_date = '2020-01-01'
+start_date_vaccination = '2021-01-01' # Considering only vaccination time
 end_date = '2021-06-26'
 target_province = 'M'
 
@@ -24,6 +25,19 @@ def shift_timeseries_by_lags(df, fix_columns, lag_numbers, lag_label='lag'):
 
 # df = shift_timeseries_by_lags(df_province_cases, fix_columns=['provincia_iso', 'fecha', 'num_casos', 'num_casos_prueba_pcr', 'Comunidad Autónoma'], lag_numbers=[1,2,3])
 # df.columns.to_flat_index()
+
+# %%
+def pct_change_by_lags(df, fix_columns, lag_numbers, lag_label='pct_change'):
+    df = df.set_index(fix_columns)
+
+    df_concat = pd.concat({f'{lag_label}_{lag}':
+        df.pct_change(periods=lag, freq='D') for lag in lag_numbers},
+        axis=1)
+
+    df_concat.columns = ['__'.join(reversed(x)) for x in df_concat.columns.to_flat_index()]
+
+    df_out = pd.concat([df, df_concat], axis=1)
+    return df_out.reset_index()
 
 # %%
 def province_code():
