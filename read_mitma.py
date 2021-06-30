@@ -82,17 +82,16 @@ df_aggregate = load('storage/df_temp_mitma.joblib')
 
 ### Province information ----
 province_code = helpers.province_code()
-province_code = province_code[['Code provincia numérico', 'Code provincia alpha']].drop_duplicates()
+province_code = province_code[['Code provincia numérico', 'Code provincia alpha', 'Code comunidad autónoma alpha']].drop_duplicates()
 
 ### Merge datasets ----
 df_aggregate = df_aggregate.merge(province_code, left_on='origen_province', right_on='Code provincia numérico')
 df_aggregate = df_aggregate.merge(province_code, left_on='destino_province', right_on='Code provincia numérico')
-df_aggregate = df_aggregate.drop(['Code provincia numérico_x', 'Code provincia numérico_y', 'origen_province', 'destino_province'], axis=1)
-df_aggregate = df_aggregate.rename(columns={'Code provincia alpha_x': 'origen_province', 'Code provincia alpha_y': 'destino_province'})
+df_aggregate = df_aggregate.rename(columns={'Code comunidad autónoma alpha_x': 'origen_comunidad_autonoma', 'Code provincia alpha_y': 'destino_provincia'})
 
 ### Pivot ----
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df_pivot = pd.pivot_table(df_aggregate, values=['viajes__sum'], index=['fecha', 'destino_province'], columns=['origen_province'], aggfunc={'viajes__sum': np.sum}, fill_value=0)
+df_pivot = pd.pivot_table(df_aggregate, values=['viajes__sum'], index=['fecha', 'destino_provincia'], columns=['origen_comunidad_autonoma'], aggfunc={'viajes__sum': np.sum}, fill_value=0)
 
 ### Replace column names ----
 columns_ = [x[1] for x in df_pivot.columns.to_flat_index()]
@@ -101,9 +100,9 @@ df_pivot = df_pivot.reset_index()
 
 # %%
 ## Prepare for model ----
-filter_ = df_pivot['destino_province']==helpers.target_province
+filter_ = df_pivot['destino_provincia']==helpers.target_province
 df_pivot_filtered = df_pivot[filter_]
-df_pivot_filtered = df_pivot_filtered.drop(columns='destino_province')
+df_pivot_filtered = df_pivot_filtered.drop(columns='destino_provincia')
 # Complete all the series
 df_pivot_filtered = df_pivot_filtered.set_index('fecha').resample('d').ffill()
 # Flatten column names and remove index

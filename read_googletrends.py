@@ -11,7 +11,7 @@ from joblib import dump, load
 import helpers
 
 # %%
-## Testing ----
+# ## Testing ----
 # kw_list = ["coronavirus", "covid", "confinamiento"]
 # pytrends = TrendReq(hl='en-US', tz=360)  
 # pytrends.build_payload(kw_list, cat=0, timeframe='2020-01-01 2021-06-23', geo='ES-AN', gprop='')
@@ -27,12 +27,14 @@ province_code = helpers.province_code()
 kw_lists = [["coronavirus", "covid", "confinamiento", "vacuna"],
             ["astrazeneca", "janssen", "infectados", "muerte"],
             ["temperatura", "fiebre", "edema"],
+            ["pandemia", "toque de queda", "tos"],
+            ["sars", "sars cov 2"],
             ["pfizer", "hospital", "dolor", "tanatorio"]]
 df_append = pd.DataFrame()
 pytrends = TrendReq(hl='en-US', tz=360)  
 
 # start_end_date = '2020-01-01 2021-06-23'
-start_end_date = f'{helpers.start_date} {helpers.end_date})'
+start_end_date = f'{helpers.start_date} {helpers.end_date}'
 
 for kw_list in kw_lists:
     for ca in province_code['Code comunidad autónoma alpha'].unique():

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # %%
 ## Libraries ----
 # General usage
@@ -33,6 +35,7 @@ df_aemet = load('storage/df_export_aemet.joblib')
 df_googletrends = load('storage/df_export_googletrends.joblib')
 df_mitma = load('storage/df_export_mitma.joblib')
 df_mscbs = load('storage/df_export_mscbs.joblib')
+df_holidays = load('storage/df_export_holidays.joblib')
 
 # %%
 ## Constants ----
@@ -94,6 +97,9 @@ df_mitma_lagged = df_mitma_lagged.add_prefix('mitma__')
 # df_mscbs_lagged = helpers.pct_change_by_lags(df_mscbs, fix_columns=['date'], lag_numbers=LAG_PCT_CHANGE)
 df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs, fix_columns=['date'], lag_numbers=LAG_OTHER)
 df_mscbs_lagged = df_mscbs_lagged.add_prefix('mscbs__')
+### Holidays ----
+df_holidays_lagged = helpers.shift_timeseries_by_lags(df_holidays, fix_columns=['Date'], lag_numbers=LAG_OTHER)
+df_holidays_lagged = df_holidays_lagged.add_prefix('holidays__')
 
 # %%
 ## Merge all datasources ----
@@ -111,6 +117,7 @@ df_merge = merge_df_to_add(df_merge, df_aemet_lagged, 'aemet__fecha')
 df_merge = merge_df_to_add(df_merge, df_googletrends_lagged, 'google_trends__date')
 df_merge = merge_df_to_add(df_merge, df_mitma_lagged, 'mitma__fecha')
 df_merge = merge_df_to_add(df_merge, df_mscbs_lagged, 'mscbs__date')
+df_merge = merge_df_to_add(df_merge, df_holidays_lagged, 'holidays__Date')
 
 # Replace `Inf`
 # df_merge = df_merge.replace([np.inf, -np.inf], np.nan)
@@ -125,9 +132,9 @@ df_merge = df_merge.fillna(df_merge.mean(numeric_only=True))
 # %%
 ## Feature engineering ----
 ### Filter only vaccination times
-idx_filter = df_merge['fecha'] >= helpers.start_date_vaccination
-idx_filter.value_counts()
-df_merge = df_merge.loc[idx_filter]
+# idx_filter = df_merge['fecha'] >= helpers.start_date_vaccination
+# idx_filter.value_counts()
+# df_merge = df_merge.loc[idx_filter]
 
 ### Dates ----
 df_merge['fecha_year'] = df_merge['fecha'].dt.year
@@ -163,7 +170,7 @@ rfr = RandomForestRegressor(random_state=SEED, max_features='auto', n_estimators
 rfr.fit(X_train, y_train)
 y_train_pred = rfr.predict(X_train)
 y_test_pred = rfr.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
 
 # %%
 ### SVM ----
@@ -172,7 +179,7 @@ regr = make_pipeline(StandardScaler(), SVR(kernel='linear'))
 regr.fit(X_train, y_train)
 y_train_pred = regr.predict(X_train)
 y_test_pred = regr.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
 
 # %%
 ### LinearRegression ----
@@ -181,7 +188,7 @@ regr = make_pipeline(StandardScaler(), LinearRegression(n_jobs=-1))
 regr.fit(X_train, y_train)
 y_train_pred = regr.predict(X_train)
 y_test_pred = regr.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
 
 # %%
 ## SequentialFeatureSelector ----
@@ -199,7 +206,7 @@ tss = TimeSeriesSplit(n_splits=3, test_size=PREDICTION_WINDOW)
 # https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 # https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
 # sfs = SequentialFeatureSelector(rfr, n_features_to_select=20, n_jobs=-1, scoring='r2', cv=tss)
-sfs = RFECV(rfr, step=50, n_jobs=-1, scoring='r2', cv=tss)
+sfs = RFECV(rfr, step=20, n_jobs=-1, scoring='r2', cv=tss)
 
 start_time = helpers.timer(None)
 sfs.fit(X_train, y_train)
@@ -207,17 +214,29 @@ helpers.timer(start_time)
 
 # %%
 # dump(sfs, 'storage/model.joblib')
-sfs = load('storage/model.joblib')
+# sfs = load('storage/model.joblib')
 
 # %%
 ### Metric calculation ----
 y_train_pred = sfs.predict(X_train)
 y_test_pred = sfs.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
+
+from sklearn import metrics
+metrics.mean_absolute_percentage_error(y_test, y_test_pred)
+metrics.mean_absolute_percentage_error(y_train, y_train_pred)
+
+pd.Series(y_train_pred).describe()
+pd.Series(y_train).describe()
 
 # %%
 # Number of features
 sfs.n_features_
+
+# %%
+pd.DataFrame({'test': y_test.to_list()[:2], 'pred': y_test_pred.tolist()[:2]}).plot(x='test', y='pred', kind='scatter')
+from sklearn import metrics
+metrics.r2_score(y_test[:7], y_test_pred[:7])
 
 # %%
 ## Feature importance ----

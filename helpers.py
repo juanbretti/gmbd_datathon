@@ -1,5 +1,6 @@
 # %%
 import pandas as pd
+import numpy as np
 from sklearn import metrics
 
 # %%
@@ -56,15 +57,42 @@ def timer(start_time=None):
         print('\n Time taken: %i hours %i minutes and %s seconds.' % (thour, tmin, round(tsec, 2)))
 
 # %%
+# https://gist.github.com/benjaminmgross/d71f161d48378d34b6970fa6d7378837
+def press_statistic(y_true, y_pred, xs):
+    """
+    Calculation of the `Press Statistics <https://www.otexts.org/1580>`_
+    https://statisticaloddsandends.wordpress.com/2018/07/30/the-press-statistic-for-linear-regression/
+    """
+    res = y_pred - y_true
+    hat = xs.dot(np.linalg.pinv(xs))
+    den = (1 - np.diagonal(hat))
+    sqr = np.square(res/den)
+    return sqr.sum()
+
+def predicted_r2(y_true, y_pred, xs):
+    """
+    Calculation of the `Predicted R-squared <https://rpubs.com/RatherBit/102428>`_
+    """
+    press = press_statistic(y_true=y_true,
+                            y_pred=y_pred,
+                            xs=xs
+    )
+
+    sst  = np.square( y_true - y_true.mean() ).sum()
+    return 1 - press / sst
+ 
+# %%
 def metrics_custom(y_true, y_pred):
     print(f'Parson R2: {metrics.r2_score(y_true, y_pred)}')
     print(f'Mean Squared Error: {metrics.mean_squared_error(y_true, y_pred)}')
     print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_true, y_pred)}')
 
-def metrics_custom2(y_train, y_train_pred, y_test, y_test_pred):
+def metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test=None):
     print('** Train **')
     metrics_custom(y_train, y_train_pred)
     print('\n** Test **')
     metrics_custom(y_test, y_test_pred)
+    if X_test is not None:
+        print(f'Predicted R-Squared: {predicted_r2(y_test, y_test_pred, X_test)}')
 
 # %%
