@@ -83,21 +83,38 @@ df_aggregate = df_aggregate.rename(columns={'Unnamed: 0': 'Comunidad Autónoma m
 df_aggregate['Comunidad Autónoma mscbs'] = df_aggregate['Comunidad Autónoma mscbs'].replace({'C. Valenciana*': 'C. Valenciana'})
 
 ### Province information ----
-province_code = helpers.province_code()
-province_code = province_code[['Comunidad Autónoma mscbs', 'Code comunidad autónoma alpha']].drop_duplicates()
-
-### Merge datasets ----
+province_code = helpers.province_code()[['Comunidad Autónoma mscbs', 'Code comunidad autónoma alpha']].drop_duplicates()
 df_aggregate = df_aggregate.merge(province_code, on='Comunidad Autónoma mscbs', how='inner')
+
+# %%
+## Add `Censo` data ----
+### CONTROL: Remove this part
+# Load `Censo` data
+df_censo = load('storage/df_export_censo.joblib')
+
+# External data
+province_code = helpers.province_code()[['Code provincia alpha', 'Code comunidad autónoma alpha']].drop_duplicates()
+df_censo = df_censo.merge(province_code, on='Code provincia alpha')
+# Group by `Comunidad Autónoma`
+df_censo = df_censo.groupby(['Code comunidad autónoma alpha', 'Date']).aggregate({'Total': np.sum})
+df_censo = df_censo.reset_index()
+
+# Add the `Censo` data
+df_aggregate_censo = df_aggregate.merge(df_censo, left_on=['Code comunidad autónoma alpha', 'date'], right_on=['Code comunidad autónoma alpha', 'Date'])
+
+# Calculate the `ratio_population`
+df_aggregate_censo['ratio_population__Dosis administradas (2)'] = df_aggregate_censo['Dosis administradas (2)']/df_aggregate_censo['Total']*100e3
 
 # %%
 ### Pivot ----
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df_pivot = pd.pivot_table(df_aggregate, values=['Dosis administradas (2)'], index=['date'], columns=['Code comunidad autónoma alpha'], aggfunc={'Dosis administradas (2)': np.sum}, fill_value=0)
+### CONTROL: Change the `values` and `aggfunc`
+df_pivot = pd.pivot_table(df_aggregate_censo, values=['ratio_population__Dosis administradas (2)'], index=['date'], columns=['Code comunidad autónoma alpha'], aggfunc={'ratio_population__Dosis administradas (2)': np.sum}, fill_value=0)
 df_pivot = df_pivot.resample('d').ffill().reset_index()
 df_pivot = df_pivot.set_index('date')
 
 # %%
-### Create the `zero` dataframe
+### Create the `zero` vaccines rows for the dataframe
 date_start = helpers.start_date
 date_end = df_pivot.index.min() - timedelta(days=1)
 dates_all = pd.date_range(date_start, date_end)

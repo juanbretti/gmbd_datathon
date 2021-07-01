@@ -89,9 +89,30 @@ df_aggregate = df_aggregate.merge(province_code, left_on='origen_province', righ
 df_aggregate = df_aggregate.merge(province_code, left_on='destino_province', right_on='Code provincia numérico')
 df_aggregate = df_aggregate.rename(columns={'Code comunidad autónoma alpha_x': 'origen_comunidad_autonoma', 'Code provincia alpha_y': 'destino_provincia'})
 
+# %%
+## Add `Censo` data ----
+### CONTROL: Remove this part
+# Load `Censo` data
+df_censo = load('storage/df_export_censo.joblib')
+
+# External data
+province_code = helpers.province_code()[['Code provincia alpha', 'Code comunidad autónoma alpha']].drop_duplicates()
+df_censo = df_censo.merge(province_code, on='Code provincia alpha')
+# Group by `Comunidad Autónoma`
+df_censo = df_censo.groupby(['Code comunidad autónoma alpha', 'Date']).aggregate({'Total': np.sum})
+df_censo = df_censo.reset_index()
+
+# Add the `Censo` data
+df_aggregate_censo = df_aggregate.merge(df_censo, left_on=['origen_comunidad_autonoma', 'fecha'], right_on=['Code comunidad autónoma alpha', 'Date'])
+
+# Calculate the `ratio_population`
+df_aggregate_censo['ratio_population__viajes__sum'] = df_aggregate_censo['viajes__sum']/df_aggregate_censo['Total']*100e3
+
+# %%
 ### Pivot ----
+### CONTROL: Change the `values` and `aggfunc`
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df_pivot = pd.pivot_table(df_aggregate, values=['viajes__sum'], index=['fecha', 'destino_provincia'], columns=['origen_comunidad_autonoma'], aggfunc={'viajes__sum': np.sum}, fill_value=0)
+df_pivot = pd.pivot_table(df_aggregate_censo, values=['ratio_population__viajes__sum'], index=['fecha', 'destino_provincia'], columns=['origen_comunidad_autonoma'], aggfunc={'ratio_population__viajes__sum': np.sum}, fill_value=0)
 
 ### Replace column names ----
 columns_ = [x[1] for x in df_pivot.columns.to_flat_index()]
