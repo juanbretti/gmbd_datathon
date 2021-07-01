@@ -19,26 +19,27 @@ censo = censo.merge(dates_df, on='Periodo')
 # %%
 # Add province and comunidad autónoma information
 censo['Code provincia numérico'] = censo['Provincias'].apply(lambda x: x[0:2])
-province_code = helpers.province_code()
-province_code = province_code[['Code comunidad autónoma alpha', 'Code provincia numérico']].drop_duplicates()
 
-censo = censo.merge(province_code, on='Code provincia numérico')
+province_code = helpers.province_code()
+province_code = province_code[['Code provincia numérico', 'Code provincia alpha']].drop_duplicates()
+censo_ca = censo.merge(province_code, on='Code provincia numérico')
 
 # %%
 # Filter and pivot
-censo_filtered = censo[(censo['Date']>='2019-12-01') & (censo['Edad']=='Total') & (censo['Sexo']=='Ambos sexos')]
-censo_pivot = pd.pivot_table(censo_filtered, index=['Date'], columns=['Code comunidad autónoma alpha'], values=['Total'], aggfunc=np.sum, fill_value=0)
+censo_filtered = censo_ca[(censo_ca['Date']>='2019-12-01') & (censo_ca['Edad']=='Total') & (censo_ca['Sexo']=='Ambos sexos')]
+censo_filtered = censo_filtered[['Date', 'Total', 'Code provincia numérico', 'Code provincia alpha']]
 
 # Extend end date
-index = censo_pivot.index.tolist()
-index[2] = pd.to_datetime(helpers.end_date)
-censo_pivot.index = index
+censo_filtered['Date'] = censo_filtered['Date'].replace({censo_filtered['Date'].max(): pd.to_datetime(helpers.end_date)})
 
-# %%
-censo_2 = censo_pivot.resample('d').ffill()
-censo_2.columns = [x[1] for x in censo_2.columns.to_flat_index()]
+censo_2 = (censo_filtered
+    .set_index('Date')
+    .groupby(['Code provincia numérico', 'Code provincia alpha'])[['Total', ]]
+    .resample('d')
+    .ffill()
+)
 
-# %%
+censo_2 = censo_2.reset_index()
 dump(censo_2, 'storage/df_export_censo.joblib') 
 
 # %%

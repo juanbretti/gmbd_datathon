@@ -87,12 +87,10 @@ def metrics_custom(y_true, y_pred):
     print(f'Mean Squared Error: {metrics.mean_squared_error(y_true, y_pred)}')
     print(f'Mean Absolute Percengage Error: {metrics.mean_absolute_percentage_error(y_true, y_pred)}')
 
-def metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test=None):
+def metrics_custom2(y_train, y_train_pred, y_test, y_test_pred):
     print('** Train **')
     metrics_custom(y_train, y_train_pred)
     print('\n** Test **')
     metrics_custom(y_test, y_test_pred)
-    if X_test is not None:
-        print(f'Predicted R-Squared: {predicted_r2(y_test, y_test_pred, X_test)}')
 
 # %%

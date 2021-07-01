@@ -29,8 +29,9 @@ import statsmodels.api as sm
 
 # %%
 ## Read dataframes ----
-df_casos_uci = load('storage/df_export_casos_uci.joblib')
-df_casos = load('storage/df_export_casos.joblib')
+df_casos_uci = load('storage/df_export_cases_uci.joblib')
+df_casos_uci_num_defunciones = load('storage/df_export_cases_uci_num_defunciones.joblib')
+df_casos = load('storage/df_export_cases.joblib')
 df_aemet = load('storage/df_export_aemet.joblib')
 df_googletrends = load('storage/df_export_googletrends.joblib')
 df_mitma = load('storage/df_export_mitma.joblib')
@@ -50,33 +51,12 @@ PREDICTION_WINDOW = 7
 # %%
 ## Prepare dataframes ----
 ### Target variable ----
-filter_ = df_casos_uci['provincia_iso']==helpers.target_province
-df_casos_uci_num_defunciones = df_casos_uci[filter_].groupby(['fecha']).aggregate({'num_def': np.sum})
-df_casos_uci_num_defunciones = df_casos_uci_num_defunciones.reset_index()
 df_casos_uci_num_defunciones = df_casos_uci_num_defunciones.add_prefix('uci_defun__')
-
-# %%
 ### Death age groups ----
-# Merge groups
-df_casos_uci['grupo_edad_merged'] = df_casos_uci['grupo_edad'].replace({'0-9': '0-59', '10-19': '0-59', '20-29': '0-59', '30-39': '0-59', '40-49': '0-59', '50-59': '0-59'})
-# Testing groups sizes
-# df_casos_uci.groupby('grupo_edad_merged').sum()
-# Merge CA information
-province_code = helpers.province_code()[['Code provincia alpha', 'Code comunidad autónoma alpha']].drop_duplicates()
-df_casos_uci = df_casos_uci.merge(province_code, left_on='provincia_iso', right_on='Code provincia alpha')
-# Pivot per CA
-df_casos_uci_age = pd.pivot_table(df_casos_uci, index=['fecha'], columns=['Code comunidad autónoma alpha', 'grupo_edad_merged'], values=['num_hosp', 'num_uci', 'num_def'], aggfunc=np.sum, fill_value=0)
-# Complete all the series
-df_casos_uci_age = df_casos_uci_age.resample('d').ffill()
-# Flatten column names and remove index
-df_casos_uci_age.columns = ['__'.join(x) for x in df_casos_uci_age.columns]
-df_casos_uci_age = df_casos_uci_age.reset_index()
 # Time shifting, minimum has to be `1`
-# df_casos_uci_age_lagged = helpers.pct_change_by_lags(df_casos_uci_age, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
-df_casos_uci_age_lagged = helpers.shift_timeseries_by_lags(df_casos_uci_age, fix_columns=['fecha'], lag_numbers=LAG_PANDEMIC)
-df_casos_uci_age_lagged = df_casos_uci_age_lagged.add_prefix('uci_age__')
-
-# %%
+# df_casos_uci_lagged = helpers.pct_change_by_lags(df_casos_uci, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
+df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, fix_columns=['fecha'], lag_numbers=LAG_PANDEMIC)
+df_casos_uci_lagged = df_casos_uci_lagged.add_prefix('uci__')
 ### Cases tested ----
 # df_casos_lagged = helpers.pct_change_by_lags(df_casos, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
 df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
@@ -111,7 +91,7 @@ def merge_df_to_add(df_merge, df_to_add, date_column):
     df = df.drop(columns=date_column)
     return df
 
-df_merge = merge_df_to_add(df_merge, df_casos_uci_age_lagged, 'uci_age__fecha')
+df_merge = merge_df_to_add(df_merge, df_casos_uci_lagged, 'uci__fecha')
 df_merge = merge_df_to_add(df_merge, df_casos_lagged, 'tests__fecha')
 df_merge = merge_df_to_add(df_merge, df_aemet_lagged, 'aemet__fecha')
 df_merge = merge_df_to_add(df_merge, df_googletrends_lagged, 'google_trends__date')
@@ -166,11 +146,11 @@ y_test = df_test['uci_defun__num_def']
 ## Model training ----
 ### RandomForestRegressor ----
 from sklearn.ensemble import RandomForestRegressor
-rfr = RandomForestRegressor(random_state=SEED, max_features='auto', n_estimators=1000, n_jobs=-1)
+rfr = RandomForestRegressor(random_state=SEED, max_features='auto', n_estimators=100, n_jobs=-1)
 rfr.fit(X_train, y_train)
 y_train_pred = rfr.predict(X_train)
 y_test_pred = rfr.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
 ### SVM ----
@@ -179,7 +159,7 @@ regr = make_pipeline(StandardScaler(), SVR(kernel='linear'))
 regr.fit(X_train, y_train)
 y_train_pred = regr.predict(X_train)
 y_test_pred = regr.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
 ### LinearRegression ----
@@ -188,7 +168,7 @@ regr = make_pipeline(StandardScaler(), LinearRegression(n_jobs=-1))
 regr.fit(X_train, y_train)
 y_train_pred = regr.predict(X_train)
 y_test_pred = regr.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
 ## SequentialFeatureSelector ----
@@ -202,11 +182,12 @@ rfr = RandomForestRegressor(random_state=SEED, max_features=None, n_estimators=1
 tss = TimeSeriesSplit(n_splits=3, test_size=PREDICTION_WINDOW)
 
 # Documentation
+# https://scikit-learn.org/stable/modules/model_evaluation.html
 # https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html
 # https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 # https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
 # sfs = SequentialFeatureSelector(rfr, n_features_to_select=20, n_jobs=-1, scoring='r2', cv=tss)
-sfs = RFECV(rfr, step=20, n_jobs=-1, scoring='r2', cv=tss)
+sfs = RFECV(rfr, step=50, n_jobs=-1, scoring='neg_mean_absolute_percentage_error', cv=tss)
 
 start_time = helpers.timer(None)
 sfs.fit(X_train, y_train)
@@ -220,7 +201,7 @@ helpers.timer(start_time)
 ### Metric calculation ----
 y_train_pred = sfs.predict(X_train)
 y_test_pred = sfs.predict(X_test)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred, X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 from sklearn import metrics
 metrics.mean_absolute_percentage_error(y_test, y_test_pred)
@@ -259,8 +240,6 @@ shap_values = explainer.shap_values(X_test_shap, approximate=False, check_additi
 shap.summary_plot(shap_values, X_test_shap)
 
 # %%
-# TODO: Mayor lag
-# TODO: falta el censo
 # TODO: Correlation, https://gist.github.com/aigera2007/567a6d34cefb30c7c6255c20e40f24fb/raw/9c9cb058d1e00533b7dd9dc8f0fd9d3ad03caabb/corr_matrix.py
 # TODO: LTSM
 # TODO: SHAP 

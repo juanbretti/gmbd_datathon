@@ -16,7 +16,7 @@ provinces = helpers.province_code()['Code provincia alpha'].drop_duplicates()
 
 df_aggregate = pd.DataFrame()
 for province in provinces:
-    holidays_ = holidays.CountryHoliday('ESP', years=[2020, 2021], prov=province).keys()
+    holidays_ = list(holidays.CountryHoliday('ESP', years=[2020, 2021], prov=province))
     df_provincia = pd.DataFrame({'Province': province, 'Date': holidays_, 'Holiday': 1})
     df_aggregate = df_aggregate.append(df_provincia, ignore_index=True)
 
