@@ -187,7 +187,7 @@ tss = TimeSeriesSplit(n_splits=3, test_size=PREDICTION_WINDOW)
 # https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 # https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
 # sfs = SequentialFeatureSelector(rfr, n_features_to_select=20, n_jobs=-1, scoring='r2', cv=tss)
-sfs = RFECV(rfr, step=50, n_jobs=-1, scoring='neg_mean_absolute_percentage_error', cv=tss)
+sfs = RFECV(rfr, step=20, n_jobs=-1, scoring='neg_mean_absolute_percentage_error', cv=tss)
 
 start_time = helpers.timer(None)
 sfs.fit(X_train, y_train)
@@ -238,3 +238,4 @@ shap.summary_plot(shap_values, X_test_shap)
 # TODO: SHAP 
 # https://towardsdatascience.com/explain-any-models-with-the-shap-values-use-the-kernelexplainer-79de9464897a
 # https://aigerimshopenova.medium.com/random-forest-classifier-and-shap-how-to-understand-your-customers-and-interpret-a-black-box-model-6166d86820d9
+# TODO: Vaccination y Movements, meter el censo
