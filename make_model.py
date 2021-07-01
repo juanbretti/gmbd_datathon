@@ -203,19 +203,12 @@ y_train_pred = sfs.predict(X_train)
 y_test_pred = sfs.predict(X_test)
 helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
-from sklearn import metrics
-metrics.mean_absolute_percentage_error(y_test, y_test_pred)
-metrics.mean_absolute_percentage_error(y_train, y_train_pred)
-
-pd.Series(y_train_pred).describe()
-pd.Series(y_train).describe()
-
 # %%
 # Number of features
 sfs.n_features_
 
 # %%
-pd.DataFrame({'test': y_test.to_list()[:2], 'pred': y_test_pred.tolist()[:2]}).plot(x='test', y='pred', kind='scatter')
+pd.DataFrame({'test': y_test.to_list(), 'pred': y_test_pred.tolist()}).plot(x='test', y='pred', kind='scatter')
 from sklearn import metrics
 metrics.r2_score(y_test[:7], y_test_pred[:7])
 
