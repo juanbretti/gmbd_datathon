@@ -153,6 +153,21 @@ y_test_pred = rfr.predict(X_test)
 helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 
 # %%
+### RandomForestRegressor: pipeline ----
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.decomposition import PCA
+
+rfr_pipeline = make_pipeline(
+    PCA(n_components=0.999999, svd_solver='full'), 
+    StandardScaler(),
+    RandomForestRegressor(random_state=SEED, max_features='auto', n_estimators=1000, n_jobs=-1))
+
+rfr_pipeline.fit(X_train, y_train)
+y_train_pred = rfr_pipeline.predict(X_train)
+y_test_pred = rfr_pipeline.predict(X_test)
+helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+
+# %%
 ### SVM ----
 from sklearn.svm import SVR
 regr = make_pipeline(StandardScaler(), SVR(kernel='linear'))
@@ -207,9 +222,13 @@ helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
 sfs.n_features_
 
 # %%
-pd.DataFrame({'test': y_test.to_list(), 'pred': y_test_pred.tolist()}).plot(x='test', y='pred', kind='scatter')
-from sklearn import metrics
-metrics.r2_score(y_test[:7], y_test_pred[:7])
+import matplotlib.pyplot as plt
+
+ax = pd.DataFrame({'test': y_test.to_list(), 'pred': y_test_pred.tolist()}).plot(x='test', y='pred', kind='scatter')
+# x = np.linspace(*ax.get_xlim())
+# ax.plot(x, x)
+ax.axline([0, 0], [1, 1])
+plt.show()
 
 # %%
 ## Feature importance ----
