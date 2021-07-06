@@ -57,7 +57,8 @@ df_cases_pivot = pd.pivot_table(df_cases_concat, index=['fecha'], columns=['Code
 df_cases_uci_pivot = pd.pivot_table(df_cases_uci_concat, index=['fecha'], columns=['Code comunidad autónoma alpha', 'grupo_edad_merged'], values=cases_uci_value_columns_ratio, aggfunc=np.sum, fill_value=0)
 
 # %%
-# Targe variable
+# Target variable
+# TODO: Normalize in 100k
 filter_ = df_cases_uci['provincia_iso']==helpers.target_province
 df_casos_uci_num_defunciones = df_cases_uci[filter_].groupby(['fecha']).aggregate({'num_def': np.sum})
 df_casos_uci_num_defunciones = df_casos_uci_num_defunciones.resample('d').asfreq().fillna(0).reset_index()

@@ -117,6 +117,7 @@ df_merge = df_merge.fillna(df_merge.mean(numeric_only=True))
 # df_merge = df_merge.loc[idx_filter]
 
 ### Dates ----
+# TODO: Fix `bisiesto`
 df_merge['fecha_year'] = df_merge['fecha'].dt.year
 df_merge['fecha_month'] = df_merge['fecha'].dt.month
 df_merge['fecha_day'] = df_merge['fecha'].dt.day
