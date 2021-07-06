@@ -46,14 +46,15 @@ for idx, date in pd.DataFrame(dates_all).iterrows():
         # List of sheets names
         df_sheet_name = pd.DataFrame({'date': [date[0]], 'sheet_names': [str(list(df))], 'number_of_sheets': [len(list(df))]})
         df_aggregate_sheet_name = df_aggregate_sheet_name.append(df_sheet_name)
+        
+        # # Temporary store
+        # if idx % 10 == 0:
+        #     print('Store', idx)
+        #     dump(df_aggregate, 'storage/df_temp_mscbs.joblib') 
+        #     dump(df_aggregate_sheet_name, 'storage/df_temp_mscbs_sheet_name.joblib') 
+    
     except:
         print('Error', date[0])
-
-    # Temporary store
-    if idx % 10 == 0:
-        print('Store', idx)
-        dump(df_aggregate, 'storage/df_temp_mscbs.joblib') 
-        dump(df_aggregate_sheet_name, 'storage/df_temp_mscbs_sheet_name.joblib') 
 
 # Final store
 dump(df_aggregate, 'storage/df_temp_mscbs.joblib') 
@@ -110,7 +111,7 @@ df_aggregate_censo['ratio_population__Dosis administradas (2)'] = df_aggregate_c
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
 ### CONTROL: Change the `values` and `aggfunc`
 df_pivot = pd.pivot_table(df_aggregate_censo, values=['ratio_population__Dosis administradas (2)'], index=['date'], columns=['Code comunidad autónoma alpha'], aggfunc={'ratio_population__Dosis administradas (2)': np.sum}, fill_value=0)
-df_pivot = df_pivot.resample('d').ffill().reset_index()
+df_pivot = df_pivot.resample('d').interpolate(limit_direction='both').reset_index()
 df_pivot = df_pivot.set_index('date')
 
 # %%
@@ -134,7 +135,7 @@ df_pivot_zero_diff['date_diff'] = df_pivot_zero_diff.index.to_series().diff().dt
 df_pivot_zero_diff = df_pivot_zero_diff.apply(lambda x: x/df_pivot_zero_diff['date_diff'])
 df_pivot_zero_diff = df_pivot_zero_diff.drop(columns='date_diff')
 # Complete the time series
-df_pivot_zero_diff = df_pivot_zero_diff.iloc[1:,].resample('d').ffill().reset_index()
+df_pivot_zero_diff = df_pivot_zero_diff.iloc[1:,].resample('d').interpolate(limit_direction='both').reset_index()
 # df_pivot_zero_diff = df_pivot_zero_diff.dropna()
 
 ### Replace column names ----

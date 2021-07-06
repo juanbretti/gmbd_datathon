@@ -125,7 +125,7 @@ filter_ = df_pivot['destino_provincia']==helpers.target_province
 df_pivot_filtered = df_pivot[filter_]
 df_pivot_filtered = df_pivot_filtered.drop(columns='destino_provincia')
 # Complete all the series
-df_pivot_filtered = df_pivot_filtered.set_index('fecha').resample('d').ffill()
+df_pivot_filtered = df_pivot_filtered.set_index('fecha').resample('d').interpolate(limit_direction='both')
 # Flatten column names and remove index
 df_pivot_filtered = df_pivot_filtered.reset_index()
 
@@ -133,4 +133,7 @@ df_pivot_filtered = df_pivot_filtered.reset_index()
 ## Export ----
 dump(df_pivot_filtered, 'storage/df_export_mitma.joblib') 
 
+# TODO: Completar datos de tiempo
+# first     2020-02-21 00:00:00
+# last      2021-05-09 00:00:00
 # %%

@@ -36,7 +36,7 @@ censo_2 = (censo_filtered
     .set_index('Date')
     .groupby(['Code provincia numérico', 'Code provincia alpha'])[['Total', ]]
     .resample('d')
-    .ffill()
+    .interpolate(limit_direction='both')
 )
 
 censo_2 = censo_2.reset_index()

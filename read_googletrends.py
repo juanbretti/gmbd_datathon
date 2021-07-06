@@ -12,9 +12,9 @@ import helpers
 
 # %%
 # ## Testing ----
-# kw_list = ["coronavirus", "covid", "confinamiento"]
+# kw_list = ["sars", "enfermo", 'enferma']
 # pytrends = TrendReq(hl='en-US', tz=360)  
-# pytrends.build_payload(kw_list, cat=0, timeframe='2020-01-01 2021-06-23', geo='ES-AN', gprop='')
+# pytrends.build_payload(kw_list, cat=0, timeframe='2020-01-01 2021-06-23', geo='ES-NC', gprop='')
 # df = pytrends.interest_over_time()
 # df.plot()
 
@@ -28,7 +28,7 @@ kw_lists = [["coronavirus", "covid", "confinamiento", "vacuna"],
             ["astrazeneca", "janssen", "infectados", "muerte"],
             ["temperatura", "fiebre", "edema"],
             ["pandemia", "toque de queda", "tos"],
-            ["sars", "sars cov 2"],
+            ["sars", "enfermo", 'enferma'],
             ["pfizer", "hospital", "dolor", "tanatorio"]]
 df_append = pd.DataFrame()
 pytrends = TrendReq(hl='en-US', tz=360)  
@@ -68,7 +68,7 @@ df1 = df1.reset_index()
 df2 = (df1.set_index('date')  # Only can be dates
           .groupby('ca')[columns_]  # The rest of the indexes
           .resample('d')
-          .ffill()
+          .interpolate(limit_direction='both')
         #   .div(7)  # To divide by 7 the value
           .reset_index()
          )

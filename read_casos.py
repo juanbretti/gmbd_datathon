@@ -66,7 +66,7 @@ df_casos_uci_num_defunciones = df_casos_uci_num_defunciones.resample('d').asfreq
 # %%
 # Flatten column names and remove index
 def flatten(df):
-    df = df.resample('d').ffill()
+    df = df.resample('d').interpolate(limit_direction='both')
     df.columns = ['__'.join(x) for x in df.columns]
     df = df.reset_index()
     return df
