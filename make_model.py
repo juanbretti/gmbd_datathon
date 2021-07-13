@@ -11,9 +11,6 @@ from joblib import dump, load
 # Custom library
 import helpers
 
-# Preprocessing
-from sklearn.preprocessing import StandardScaler
-
 # Plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -40,13 +37,14 @@ df_holidays = load('storage/df_export_holidays.joblib')
 
 # %%
 ## Constants ----
-TRAIN_PERCENTAGE = 0.9
 MAX_LAG = 21
-LAG_PANDEMIC = [1, 7, 14, MAX_LAG]
-LAG_OTHER = [0, 7, 14, MAX_LAG]
-LAG_PCT_CHANGE = [7, 14]
-SEED = 42
+LAG_UCI = [1, 7, 10, 14]
+LAG_CASOS = [1, 10, 15, MAX_LAG]
+LAG_OTHER = [0, 5, 10, MAX_LAG]
 PREDICTION_WINDOW = 7
+SEED = 42
+# LAG_PCT_CHANGE = [7, 14]  # Not in use
+# TRAIN_PERCENTAGE = 0.9  # Not in use
 
 # %%
 ## Prepare dataframes ----
@@ -55,11 +53,11 @@ df_casos_uci_num_defunciones = df_casos_uci_num_defunciones.add_prefix('uci_defu
 ### Death age groups ----
 # Time shifting, minimum has to be `1`
 # df_casos_uci_lagged = helpers.pct_change_by_lags(df_casos_uci, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
-df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, fix_columns=['fecha'], lag_numbers=LAG_PANDEMIC)
+df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, fix_columns=['fecha'], lag_numbers=LAG_UCI)
 df_casos_uci_lagged = df_casos_uci_lagged.add_prefix('uci__')
 ### Cases tested ----
 # df_casos_lagged = helpers.pct_change_by_lags(df_casos, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
-df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, fix_columns=['fecha'], lag_numbers=LAG_OTHER)
+df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, fix_columns=['fecha'], lag_numbers=LAG_CASOS)
 df_casos_lagged = df_casos_lagged.add_prefix('tests__')
 ### AEMET temperature ----
 # df_aemet_lagged = helpers.pct_change_by_lags(df_aemet, fix_columns=['fecha'], lag_numbers=LAG_PCT_CHANGE)
@@ -124,6 +122,7 @@ df_merge['fecha_day'] = df_merge['fecha'].dt.day
 df_merge['fecha_dayofweek'] = df_merge['fecha'].dt.dayofweek
 df_merge['fecha_dayofyear'] = df_merge['fecha'].dt.dayofyear
 df_merge['fecha_weekend'] = [(x in [5,6])*1 for x in df_merge['fecha_dayofweek']]
+df_merge_ts = df_merge.copy()  # For the `time series`
 df_merge = df_merge.drop(columns=['fecha'])
 
 # %%
@@ -152,6 +151,88 @@ rfr.fit(X_train, y_train)
 y_train_pred = rfr.predict(X_train)
 y_test_pred = rfr.predict(X_test)
 helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
+
+# %%
+## Timeseries ----
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.graphics.tsaplots import plot_pacf
+
+# Split
+df_train_ts = df_merge_ts.iloc[MAX_LAG:split_, :]
+
+y_train_ts = df_train_ts.set_index('fecha')['uci_defun__num_def']
+y_train_pred_ts = pd.Series(y_train_pred, index=y_train_ts.index)
+
+plot_acf(y_train_ts.diff(1).dropna(), lags=20, title='ACF: original');
+plot_pacf(y_train_ts.diff(1).dropna(), lags=20, title='PACF: original');
+
+y_train_residual_ts = y_train_ts-y_train_pred_ts
+plot_acf(y_train_residual_ts.dropna(), lags=20, title='ACF: Residuals');
+plot_pacf(y_train_residual_ts.dropna(), lags=20, title='PACF: Residuals');
+
+# %%
+# From the HTML
+## Not white noise
+## 
+## Using t Test: Mean different from zero
+## Using number of differences required for a stationary series test (ADF): Data is non stationary in the mean
+## Using Shapiro Test: Data not normally distributed. Reject H0, so we acept H1: data is not normally distributed.
+## Using Box Test (Box-Pierce): Data correlated at lag 5. Not possible white noise
+## 
+## t Test: p-value=0
+## Differences required for a stationary: d=1
+## Shapiro Test: p-value=0
+## Box Test (Box-Pierce): lag=5 p-value=0
+
+# %%
+from statsmodels.stats.diagnostic import acorr_ljungbox as boxtest
+boxtest(y_train_residual_ts, lags=range(1,3), boxpierce=True, return_df=True)
+## Using Box Test (Box-Pierce): Data correlated at lag 2. Not possible white noise
+
+# %%
+from statsmodels.tsa.stattools import adfuller
+def test_stationarity(timeseries):
+
+    #Determing rolling statistics
+    rolmean = timeseries.rolling(window=7).mean()
+    rolstd = timeseries.rolling(window=7).std()
+
+    #Plot rolling statistics:
+    fig = plt.figure(figsize=(12, 8))
+    orig = plt.plot(timeseries, color='blue',label='Original')
+    mean = plt.plot(rolmean, color='red', label='Rolling Mean')
+    std = plt.plot(rolstd, color='black', label='Rolling Std')
+    plt.legend(loc='best')
+    plt.title('Rolling Mean & Standard Deviation')
+    plt.show()
+    
+    #Perform Dickey-Fuller test:
+    print ('Results of Dickey-Fuller Test:')
+    dftest = adfuller(timeseries, autolag='AIC')
+    dfoutput = pd.Series(dftest[0:4], index=['Test Statistic','p-value','#Lags Used','Number of Observations Used'])
+    for key,value in dftest[4].items():
+        dfoutput['Critical Value (%s)'%key] = value
+    print (dfoutput) 
+
+test_stationarity(y_train_residual_ts)
+## Using number of differences required for a stationary series test (ADF): Data is non stationary in the mean
+# The lag is d=12?
+
+# %%
+from scipy import stats
+stats.ttest_1samp(y_train_residual_ts, 0)
+## Using t Test: Mean different from zero
+
+# %%
+from scipy import stats
+stats.shapiro(y_train_residual_ts)
+## Using Shapiro Test: Data not normally distributed. Reject H0, so we acept H1: data is not normally distributed.
+
+# %%
+model = ARIMA(y_train_residual_ts, order=(12,1,0), freq='D')
+model_fit = model.fit()
+print(model_fit.summary())
 
 # %%
 ### RandomForestRegressor: pipeline ----

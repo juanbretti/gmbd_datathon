@@ -55,6 +55,10 @@ for kw_list in kw_lists:
                 break
 
 # %%
+# dump(df_append, 'storage/df_temp_googletrends.joblib') 
+df_append = load('storage/df_temp_googletrends.joblib')
+
+# %%
 ## Weekly to daily data ----
 # https://stackoverflow.com/a/59856663/3780957
 
@@ -75,9 +79,6 @@ df2 = (df1.set_index('date')  # Only can be dates
 df2
 
 # %%
-# df2 = load('storage/df_export_googletrends.joblib')
-
-# %%
 ## Prepare for model ----
 df2_pivot = df2.pivot(index=['date'], columns=['ca'])
 # Flatten column names and remove index
@@ -87,5 +88,15 @@ df2_pivot = df2_pivot.reset_index()
 # %%
 ## Export ----
 dump(df2_pivot, 'storage/df_export_googletrends.joblib') 
+
+# %%
+## For the linear model ----
+province_ = province_code[['Code comunidad autónoma alpha', 'Code provincia alpha']].drop_duplicates()
+df3 = df2.merge(province_, left_on='ca', right_on='Code comunidad autónoma alpha')
+df3 = df3.drop(columns=['ca'])
+
+df3 = df3.rename({'date': 'fecha'}, axis=1)
+
+dump(df3, 'storage/df_export_googletrends_lm.joblib') 
 
 # %%

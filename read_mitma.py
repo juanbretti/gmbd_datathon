@@ -9,6 +9,9 @@ from datetime import datetime
 import helpers
 from joblib import dump, load
 
+## Constant ----
+RATIO_PREFIX = 'ratio_population__'
+
 # %%
 ## Download from `mitma` ----
 # url = 'https://opendata-movilidad.mitma.es/maestra1-mitma-municipios/ficheros-diarios/2020-02/20200221_maestra_1_mitma_municipio.txt.gz'
@@ -106,13 +109,19 @@ df_censo = df_censo.reset_index()
 df_aggregate_censo = df_aggregate.merge(df_censo, left_on=['origen_comunidad_autonoma', 'fecha'], right_on=['Code comunidad autónoma alpha', 'Date'])
 
 # Calculate the `ratio_population`
-df_aggregate_censo['ratio_population__viajes__sum'] = df_aggregate_censo['viajes__sum']/df_aggregate_censo['Total']*100e3
+# df_aggregate_censo['ratio_population__viajes__sum'] = df_aggregate_censo['viajes__sum']/df_aggregate_censo['Total']*100e3
+cases_value_columns = ['viajes__sum', 'viajes__mean', 'viajes__std', 'viajes__min', 'viajes__max', 'viajes_km__sum', 'viajes_km__mean', 'viajes_km__std', 'viajes_km__min', 'viajes_km__max']
+df_aggregate_censo = df_aggregate_censo[cases_value_columns].apply(lambda x: x/df_aggregate_censo['Total']*100e3).add_prefix(RATIO_PREFIX)
+
+# Concatenate
+aggegate_columns = ['fecha', 'viajes__sum', 'viajes__mean', 'viajes__std', 'viajes__min', 'viajes__max', 'viajes_km__sum', 'viajes_km__mean', 'viajes_km__std', 'viajes_km__min', 'viajes_km__max', 'origen_comunidad_autonoma', 'destino_provincia']
+df_aggregate_concat = pd.concat([df_aggregate[aggegate_columns], df_aggregate_censo], axis=1)
 
 # %%
 ### Pivot ----
 ### CONTROL: Change the `values` and `aggfunc`
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df_pivot = pd.pivot_table(df_aggregate_censo, values=['ratio_population__viajes__sum'], index=['fecha', 'destino_provincia'], columns=['origen_comunidad_autonoma'], aggfunc={'ratio_population__viajes__sum': np.sum}, fill_value=0)
+df_pivot = pd.pivot_table(df_aggregate_concat, values=['ratio_population__viajes__sum'], index=['fecha', 'destino_provincia'], columns=['origen_comunidad_autonoma'], aggfunc={'ratio_population__viajes__sum': np.sum}, fill_value=0)
 
 ### Replace column names ----
 columns_ = [x[1] for x in df_pivot.columns.to_flat_index()]
@@ -136,4 +145,23 @@ dump(df_pivot_filtered, 'storage/df_export_mitma.joblib')
 # TODO: Completar datos de tiempo
 # first     2020-02-21 00:00:00
 # last      2021-05-09 00:00:00
+
+# %%
+## For the linear model ----
+df_lm1 = pd.pivot_table(df_aggregate_concat, index=['fecha'], columns=['destino_provincia'], aggfunc=np.sum, fill_value=0)
+df_lm1 = df_lm1.resample('d').interpolate(limit_direction='both')
+df_lm2 = df_lm1.reset_index()
+
+df_lm3 = pd.melt(df_lm2, id_vars=['fecha'])
+df_lm3 = df_lm3.rename({'destino_provincia': 'Code provincia alpha'}, axis=1)
+
+df_lm4 = pd.pivot(df_lm3, index=['fecha', 'Code provincia alpha'], columns=[None])
+df_lm4.columns = ['__'.join(x) for x in df_lm4.columns]
+df_lm4 = df_lm4.reset_index()
+
+province_ = province_code[['Code comunidad autónoma alpha', 'Code provincia alpha']].drop_duplicates()
+df_lm5 = df_lm4.merge(province_, on='Code provincia alpha')
+
+dump(df_lm5, 'storage/df_export_mitma_lm.joblib') 
+
 # %%

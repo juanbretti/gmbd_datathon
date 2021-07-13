@@ -66,7 +66,7 @@ df_casos_uci_num_defunciones = df_casos_uci_num_defunciones.resample('d').asfreq
 # %%
 # Flatten column names and remove index
 def flatten(df):
-    df = df.resample('d').interpolate(limit_direction='both')
+    df = df.resample('d').asfreq().fillna(0)
     df.columns = ['__'.join(x) for x in df.columns]
     df = df.reset_index()
     return df
@@ -78,5 +78,15 @@ df_cases_uci_pivot = flatten(df_cases_uci_pivot)
 dump(df_cases_pivot, 'storage/df_export_cases.joblib') 
 dump(df_cases_uci_pivot, 'storage/df_export_cases_uci.joblib') 
 dump(df_casos_uci_num_defunciones, 'storage/df_export_cases_uci_num_defunciones.joblib') 
+
+# %%
+## For the linear model ----
+df_cases_lm = df_cases_concat
+df_cases_lm = df_cases_lm.rename({'provincia_iso': 'Code provincia alpha'}, axis=1)
+df_cases_uci_lm = df_cases_uci_concat.groupby(['fecha', 'provincia_iso', 'Code comunidad autónoma alpha']).sum().reset_index()
+df_cases_uci_lm = df_cases_uci_lm.rename({'provincia_iso': 'Code provincia alpha'}, axis=1)
+
+dump(df_cases_lm, 'storage/df_export_cases_lm.joblib') 
+dump(df_cases_uci_lm, 'storage/df_export_cases_uci_lm.joblib') 
 
 # %%

@@ -37,7 +37,7 @@ for idx, date in pd.DataFrame(dates_all).iterrows():
     try:
         df = read_mscbs(date[0])
 
-        # Getting the first sheet, which is more likely the appropiate one
+        # Getting the first sheet, which is more likely the appropriate one
         sheet_name_first = list(df)[0]
         sheet_first = df[sheet_name_first]
         sheet_first['date'] = date[0]
@@ -57,8 +57,8 @@ for idx, date in pd.DataFrame(dates_all).iterrows():
         print('Error', date[0])
 
 # Final store
-dump(df_aggregate, 'storage/df_temp_mscbs.joblib') 
-dump(df_aggregate_sheet_name, 'storage/df_temp_mscbs_sheet_name.joblib') 
+# dump(df_aggregate, 'storage/df_temp_mscbs.joblib') 
+# dump(df_aggregate_sheet_name, 'storage/df_temp_mscbs_sheet_name.joblib') 
 
 # %%
 ## Exploration ----
@@ -144,12 +144,12 @@ def replace_columns(df, prefix):
     df.columns = columns_
     return df.reset_index()
 
-df_pivot_zero = replace_columns(df_pivot_zero, 'cumulative')
-df_pivot_zero_diff = replace_columns(df_pivot_zero_diff.set_index('date'), 'daily')
+df_pivot_zero_flat = replace_columns(df_pivot_zero.copy(), 'cumulative')
+df_pivot_zero_diff_flat = replace_columns(df_pivot_zero_diff.copy().set_index('date'), 'daily')
 
 # %%
 ### Concatenate the two tables ----
-df = pd.concat([df_pivot_zero.set_index('date'), df_pivot_zero_diff.set_index('date')], axis=1)
+df = pd.concat([df_pivot_zero_flat.set_index('date'), df_pivot_zero_diff_flat.set_index('date')], axis=1)
 
 # %%
 ## Prepare for model ----
@@ -161,3 +161,29 @@ df_reseted = df.reset_index()
 dump(df_reseted, 'storage/df_export_mscbs.joblib') 
 
 # %%
+## For the linear model ----
+def prepare_for_lm(df, target_name):
+    df = df.reset_index()
+    df = pd.melt(df, id_vars=['date'])
+    df = df.drop(columns=[None])
+    df = df.rename({'value': target_name}, axis=1)
+    return df
+
+df_pivot_zero_1 = prepare_for_lm(df_pivot_zero, 'cumulative')
+df_pivot_zero_diff_1 = prepare_for_lm(df_pivot_zero_diff, 'daily')
+
+df_lm = df_pivot_zero_1.merge(df_pivot_zero_diff_1, on=['date', 'Code comunidad autónoma alpha'], how='outer')
+df_lm = df_lm.dropna(subset=['Code comunidad autónoma alpha']) 
+df_lm = df_lm[~(df_lm['Code comunidad autónoma alpha']=='')]
+
+df_lm = df_lm.fillna(0)
+
+province_ = province_code[['Code comunidad autónoma alpha', 'Code provincia alpha']].drop_duplicates()
+df_lm1 = df_lm.merge(province_, on='Code comunidad autónoma alpha')
+
+df_lm1 = df_lm1.rename({'date': 'fecha'}, axis=1)
+
+dump(df_lm1, 'storage/df_export_mscbs_lm.joblib') 
+
+# %%
+
