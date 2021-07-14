@@ -76,81 +76,136 @@ df_holidays_lagged = helpers.shift_timeseries_by_lags(df_holidays, fix_columns=f
 df_holidays_lagged = add_prefix(df_holidays_lagged, 'holidays__')
 
 # %%
-## Merge all datasources ----
-df_merge = df_casos_uci_target.copy()
-df_merge = df_merge.merge(df_casos_uci_lagged, on=fix_columns)
-df_merge = df_merge.merge(df_casos_lagged, on=fix_columns)
-df_merge = df_merge.merge(df_aemet_lagged, on=fix_columns)
-df_merge = df_merge.merge(df_googletrends_lagged, on=fix_columns)
-df_merge = df_merge.merge(df_mitma_lagged, on=fix_columns)
-df_merge = df_merge.merge(df_mscbs_lagged, on=fix_columns)
-df_merge = df_merge.merge(df_holidays_lagged, on=fix_columns)
+# # Linear model
 
-df_merge = df_merge.fillna(df_merge.mean(numeric_only=True))
+# def feature_coefficient(X, y, threshold_coef=0.01, threshold_pvalue=0.05):
+#     """List the significant features
 
-# %%
-## Feature engineering ----
-### Filter only vaccination times
+#     Args:
+#         X (DataFrame): Features data frame
+#         y (Series): Target variable
+#         threshold_coef (float, optional): Threshold value for the coefficient. Defaults to 0.01.
+#         threshold_pvalue (float, optional): Theshold value for the p-value. Defaults to 0.05.
 
-### Dates ----
-# TODO: Fix `bisiesto`
-df_merge['fecha_year'] = df_merge['fecha'].dt.year
-df_merge['fecha_month'] = df_merge['fecha'].dt.month
-df_merge['fecha_day'] = df_merge['fecha'].dt.day
-df_merge['fecha_dayofweek'] = df_merge['fecha'].dt.dayofweek
-df_merge['fecha_dayofyear'] = df_merge['fecha'].dt.dayofyear
-df_merge['fecha_weekend'] = [(x in [5,6])*1 for x in df_merge['fecha_dayofweek']]
-df_merge_ts = df_merge.copy()  # For the `time series`
-df_merge = df_merge.drop(columns=['fecha'])
+#     Returns:
+#         DataFrame: Table with the significant features
+#     """
+#     X = sm.add_constant(X)
+#     model = sm.OLS(y, X)
+#     results = model.fit()
+#     print(results.summary()) #Summary of the model
 
-# %%
-## Split dataset ----
-# Calculate prediction window
-split_ = df_merge.shape[0]-PREDICTION_WINDOW
+#     summary_ = pd.DataFrame({'Feature': results.pvalues.keys(), 'Coefficient': results.params.values, 'p-value': results.pvalues.values})
+#     filter_ = (summary_['Coefficient'].abs() > threshold_coef) & (summary_['p-value'].abs() < threshold_pvalue)
+#     summary_ = summary_[filter_].sort_values('Coefficient', ascending=False)
+#     return summary_, summary_[['Feature', 'Coefficient']]
 
-# Split
-df_train = df_merge.iloc[MAX_LAG:split_, :]
-df_test = df_merge.iloc[split_:(split_+PREDICTION_WINDOW), :]
+# X_train_dummies = pd.get_dummies(X_train, columns = ['Code provincia alpha'], drop_first=True)
+# X_train_dummies = X_train_dummies.drop(columns=fix_columns, errors='ignore')
 
-X_train = df_train.drop(columns=TARGET_VARIABLE)
-X_test = df_test.drop(columns=TARGET_VARIABLE)
-y_train = df_train[TARGET_VARIABLE]
-y_test = df_test[TARGET_VARIABLE]
+# # List of the most relevant features/columns of the dataset.
+# print('List the significant features')
+# summ, df = feature_coefficient(X_train_dummies, y_train)
+
+# # Model performance
+# summ
+# df.style.hide_index()
+# # Tornado plot
+# df.plot.barh(x='Feature', y='Coefficient', xlim=[-3,3], figsize=(15,15)).invert_yaxis()
 
 # %%
-# Linear model
+## All possible column combinations ----
+import itertools
+
+sources = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
+all_combinations = []
+for i in range(1, len(sources)+1):
+    all_combinations = all_combinations + list(itertools.combinations(sources, i))
+
+# %%
 import statsmodels.api as sm
+from sklearn.ensemble import RandomForestRegressor
+from sklearn import metrics
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
-def feature_coefficient(X, y, threshold_coef=0.01, threshold_pvalue=0.05):
-    """List the significant features
+df_all_combinations = pd.DataFrame()
 
-    Args:
-        X (DataFrame): Features data frame
-        y (Series): Target variable
-        threshold_coef (float, optional): Threshold value for the coefficient. Defaults to 0.01.
-        threshold_pvalue (float, optional): Theshold value for the p-value. Defaults to 0.05.
+for combination in all_combinations:
+    df_merge = df_casos_uci_target.copy()
+    if 'casos_uci' in combination:
+        df_merge = df_merge.merge(df_casos_uci_lagged, on=fix_columns)
+    elif 'casos' in combination:
+        df_merge = df_merge.merge(df_casos_lagged, on=fix_columns)
+    elif 'aemet' in combination:
+        df_merge = df_merge.merge(df_aemet_lagged, on=fix_columns)
+    elif 'googletrends' in combination:
+        df_merge = df_merge.merge(df_googletrends_lagged, on=fix_columns)
+    elif 'mitma' in combination:
+        df_merge = df_merge.merge(df_mitma_lagged, on=fix_columns)
+    elif 'mscbs' in combination:
+        df_merge = df_merge.merge(df_mscbs_lagged, on=fix_columns)
+    elif 'holidays' in combination:
+        df_merge = df_merge.merge(df_holidays_lagged, on=fix_columns)
+    else:
+        pass
 
-    Returns:
-        DataFrame: Table with the significant features
-    """
-    X = sm.add_constant(X)
-    model = sm.OLS(y, X)
-    results = model.fit()
-    print(results.summary()) #Summary of the model
+    df_merge['fecha_year'] = df_merge['fecha'].dt.year
+    df_merge['fecha_month'] = df_merge['fecha'].dt.month
+    df_merge['fecha_day'] = df_merge['fecha'].dt.day
+    df_merge['fecha_dayofweek'] = df_merge['fecha'].dt.dayofweek
+    df_merge['fecha_dayofyear'] = df_merge['fecha'].dt.dayofyear
+    df_merge['fecha_weekend'] = [(x in [5,6])*1 for x in df_merge['fecha_dayofweek']]
 
-    summary_ = pd.DataFrame({'Feature': results.pvalues.keys(), 'Coefficient': results.params.values, 'p-value': results.pvalues.values})
-    filter_ = (summary_['Coefficient'].abs() > threshold_coef) & (summary_['p-value'].abs() < threshold_pvalue)
-    summary_ = summary_[filter_].sort_values('Coefficient', ascending=False)
-    return summary_[['Feature', 'Coefficient']]
+    # Train test split
+    df_merge = df_merge.dropna().reset_index(drop=True)
+    ## Last `PREDICTION_WINDOW` days
+    df_test = df_merge.sort_values(['fecha']).groupby(['Code provincia alpha']).tail(PREDICTION_WINDOW)
+    df_train = df_merge[~df_merge.index.isin(df_test.index)]
+    ## Random split
+    # prediction_window_ = PREDICTION_WINDOW*df_merge['Code provincia alpha'].nunique()
+    # df_train, df_test = train_test_split(df_merge, test_size=prediction_window_, random_state=42)
 
-X_train_dummies = pd.get_dummies(X_train, columns = ['Code provincia alpha'], drop_first=True)
-X_train_dummies = X_train_dummies.drop(columns=fix_columns, errors='ignore')
+    X_train = df_train.drop(columns=TARGET_VARIABLE)
+    X_test = df_test.drop(columns=TARGET_VARIABLE)
+    y_train = df_train[TARGET_VARIABLE].reset_index(drop=True)
+    y_test = df_test[TARGET_VARIABLE].reset_index(drop=True)
 
-# List of the most relevant features/columns of the dataset.
-print('List the significant features')
-df = feature_coefficient(X_train_dummies, y_train)
-df.style.hide_index()
+    # Dummies
+    X_train_dummies = pd.get_dummies(X_train, columns = ['Code provincia alpha'], drop_first=True)
+    X_train_dummies = X_train_dummies.drop(columns=fix_columns, errors='ignore')
+    # Scaler
+    scaler = StandardScaler()
+    X_tranformed = scaler.fit_transform(X_train_dummies)
+    X_train_dummies_scaled = pd.DataFrame(X_tranformed, columns=X_train_dummies.columns)
 
-df.plot.barh(x='Feature', y='Coefficient', xlim=[-3,3], figsize=(15,15))
+    # Dummies
+    X_test_dummies = pd.get_dummies(X_test, columns = ['Code provincia alpha'], drop_first=True)
+    X_test_dummies = X_test_dummies.drop(columns=fix_columns, errors='ignore')
+    X_test_dummies = X_test_dummies.reindex(columns = X_train_dummies.columns, fill_value=0)  # Ensure that I have all the columns in the `dummy`.
+    # Scaler
+    X_tranformed = scaler.transform(X_test_dummies)
+    X_test_dummies_scaled = pd.DataFrame(X_tranformed, columns=X_test_dummies.columns)
+
+    # Regression model
+    ## OLS
+    # X_train_dummies_scaled = sm.add_constant(X_train_dummies_scaled)
+    # X_test_dummies_scaled = sm.add_constant(X_test_dummies_scaled, has_constant='add')
+    # model = sm.OLS(y_train, X_train_dummies_scaled)
+    # results = model.fit()
+    ## RandomForest
+    model = RandomForestRegressor(max_depth=2, random_state=0)
+    results = model.fit(X_train_dummies_scaled, y_train)
+
+    # Predict
+    y_train_pred = results.predict(X_train_dummies_scaled)
+    y_test_pred = results.predict(X_test_dummies_scaled)
+
+    # Append results
+    # results.rsquared_adj
+    df_combination = pd.DataFrame({'combination': [combination], 'r2 train': metrics.r2_score(y_train, y_train_pred), 'r2 test': metrics.r2_score(y_test, y_test_pred)})
+    df_all_combinations = df_all_combinations.append(df_combination, ignore_index=True)
+
+df_all_combinations.sort_values(by=['r2 test'], ascending=False)
 
 # %%
