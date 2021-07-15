@@ -94,3 +94,9 @@ def metrics_custom2(y_train, y_train_pred, y_test, y_test_pred):
     metrics_custom(y_test, y_test_pred)
 
 # %%
+def add_prefix(df, prefix, exclude):
+    columns_all = pd.Series(df.columns)
+    columns_to_prefix = pd.Series(columns_all).isin(exclude)
+    columns_all[~columns_to_prefix] = prefix+columns_all[~columns_to_prefix]
+    df.columns = columns_all
+    return df

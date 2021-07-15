@@ -24,6 +24,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from joblib import dump, load
+import itertools
 
 # Custom library
 import helpers
@@ -42,6 +43,21 @@ from sklearn.model_selection import train_test_split
 import statsmodels.api as sm
 
 # %%
+## Constants ----
+TARGET_VARIABLE_1 = 'ratio_population__num_def__lag_-7'
+TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
+LAG_TARGET = [-7]
+LAG_UCI = [0, 7, 14, 21]
+LAG_CASOS = [0, 7, 14, 21]
+LAG_OTHER = [0, 7, 14, 21]
+LAG_MAX = max(LAG_UCI+LAG_CASOS+LAG_OTHER)
+SEED = 42
+PREDICTION_WINDOW = 7
+PROPORTION_TEST = 0.3
+FIX_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
+P_VALUE = 0.05
+
+# %%
 ## Read dataframes ----
 df_casos_uci = load('storage/df_export_cases_uci_lm.joblib')
 df_casos = load('storage/df_export_cases_lm.joblib')
@@ -52,150 +68,110 @@ df_mscbs = load('storage/df_export_mscbs_lm.joblib')
 df_holidays = load('storage/df_export_holidays_lm.joblib')
 
 # %%
-## Constants ----
-TARGET_VARIABLE = 'casos_uci_target__ratio_population__num_def'
-PREDICTION_WINDOW = 7
-LAG_UCI = [1]
-LAG_CASOS = [1]
-LAG_OTHER = [0]
-MAX_LAG = max(LAG_UCI+LAG_CASOS+LAG_OTHER)
-SEED = 42
-
-# %%
 ## Prepare dataframes ----
-fix_columns = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
-
-def add_prefix(df, prefix, exclude=fix_columns):
-    columns_all = pd.Series(df.columns)
-    columns_to_prefix = pd.Series(columns_all).isin(exclude)
-    columns_all[~columns_to_prefix] = prefix+columns_all[~columns_to_prefix]
-    df.columns = columns_all
-    return df
-
 ### Target variable ----
-df_casos_uci_target = df_casos_uci[fix_columns+['ratio_population__num_def']]
-df_casos_uci_target = add_prefix(df_casos_uci_target, 'casos_uci_target__')
+df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS, LAG_TARGET)
+df_casos_uci_target = df_casos_uci_lagged[FIX_COLUMNS+[TARGET_VARIABLE_1]]
+df_casos_uci_target = helpers.add_prefix(df_casos_uci_target, 'casos_uci_target__', FIX_COLUMNS)
 ### Death age groups ----
-df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, fix_columns=fix_columns, lag_numbers=LAG_UCI)
-df_casos_uci_lagged = add_prefix(df_casos_uci_lagged, 'casos_uci__')
+df_casos_uci = df_casos_uci.drop(columns=['ratio_population__num_def'])
+df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS, LAG_UCI)
+df_casos_uci_lagged = helpers.add_prefix(df_casos_uci_lagged, 'casos_uci__', FIX_COLUMNS)
 ### Cases tested ----
-df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, fix_columns=fix_columns, lag_numbers=LAG_CASOS)
-df_casos_lagged = add_prefix(df_casos_lagged, 'casos__')
+df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, FIX_COLUMNS, LAG_CASOS)
+df_casos_lagged = helpers.add_prefix(df_casos_lagged, 'casos__', FIX_COLUMNS)
 ### AEMET temperature ----
-df_aemet_lagged = helpers.shift_timeseries_by_lags(df_aemet, fix_columns=fix_columns, lag_numbers=LAG_OTHER)
-df_aemet_lagged = add_prefix(df_aemet_lagged, 'aemet__')
+df_aemet_lagged = helpers.shift_timeseries_by_lags(df_aemet, FIX_COLUMNS, LAG_OTHER)
+df_aemet_lagged = helpers.add_prefix(df_aemet_lagged, 'aemet__', FIX_COLUMNS)
 ### Google Trends ----
-df_googletrends_lagged = helpers.shift_timeseries_by_lags(df_googletrends, fix_columns=fix_columns, lag_numbers=LAG_OTHER)
-df_googletrends_lagged = add_prefix(df_googletrends_lagged, 'googletrends__')
+df_googletrends_lagged = helpers.shift_timeseries_by_lags(df_googletrends, FIX_COLUMNS, LAG_OTHER)
+df_googletrends_lagged = helpers.add_prefix(df_googletrends_lagged, 'googletrends__', FIX_COLUMNS)
 ### Movements to Madrid (`mitma`) ----
-df_mitma_lagged = helpers.shift_timeseries_by_lags(df_mitma, fix_columns=fix_columns, lag_numbers=LAG_OTHER)
-df_mitma_lagged = add_prefix(df_mitma_lagged, 'mitma__')
+df_mitma_lagged = helpers.shift_timeseries_by_lags(df_mitma, FIX_COLUMNS, LAG_OTHER)
+df_mitma_lagged = helpers.add_prefix(df_mitma_lagged, 'mitma__', FIX_COLUMNS)
 ### Vaccination in Spain (`mscbs`) ----
-df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs, fix_columns=fix_columns, lag_numbers=LAG_OTHER)
-df_mscbs_lagged = add_prefix(df_mscbs_lagged, 'mscbs__')
+df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs, FIX_COLUMNS, LAG_OTHER)
+df_mscbs_lagged = helpers.add_prefix(df_mscbs_lagged, 'mscbs__', FIX_COLUMNS)
 ### Holidays ----
-df_holidays_lagged = helpers.shift_timeseries_by_lags(df_holidays, fix_columns=fix_columns, lag_numbers=LAG_OTHER)
-df_holidays_lagged = add_prefix(df_holidays_lagged, 'holidays__')
+df_holidays_lagged = helpers.shift_timeseries_by_lags(df_holidays, FIX_COLUMNS, LAG_OTHER)
+df_holidays_lagged = helpers.add_prefix(df_holidays_lagged, 'holidays__', FIX_COLUMNS)
 
 # %%
 ## All possible column combinations ----
-import itertools
-
-sources = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
+# 'casos_uci', 'casos', 
+sources = ['aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
 all_combinations = []
 for i in range(1, len(sources)+1):
     all_combinations = all_combinations + list(itertools.combinations(sources, i))
 
+combination = ('casos_uci', 'casos', 'googletrends')
+p_value=0.05
+
 ## Calculate model for combination ----
-def model_for_combination(combination, consider_province=False):
+def model_for_combination(combination):
 
     # Merge the datasources
     df_merge = df_casos_uci_target.copy()
     if 'casos_uci' in combination:
-        df_merge = df_merge.merge(df_casos_uci_lagged, on=fix_columns)
+        df_merge = df_merge.merge(df_casos_uci_lagged, on=FIX_COLUMNS)
     if 'casos' in combination:
-        df_merge = df_merge.merge(df_casos_lagged, on=fix_columns)
+        df_merge = df_merge.merge(df_casos_lagged, on=FIX_COLUMNS)
     if 'aemet' in combination:
-        df_merge = df_merge.merge(df_aemet_lagged, on=fix_columns)
+        df_merge = df_merge.merge(df_aemet_lagged, on=FIX_COLUMNS)
     if 'googletrends' in combination:
-        df_merge = df_merge.merge(df_googletrends_lagged, on=fix_columns)
+        df_merge = df_merge.merge(df_googletrends_lagged, on=FIX_COLUMNS)
     if 'mitma' in combination:
-        df_merge = df_merge.merge(df_mitma_lagged, on=fix_columns)
+        df_merge = df_merge.merge(df_mitma_lagged, on=FIX_COLUMNS)
     if 'mscbs' in combination:
-        df_merge = df_merge.merge(df_mscbs_lagged, on=fix_columns)
+        df_merge = df_merge.merge(df_mscbs_lagged, on=FIX_COLUMNS)
     if 'holidays' in combination:
-        df_merge = df_merge.merge(df_holidays_lagged, on=fix_columns)
-
-    # Feature engineering of `fecha`
-    df_merge['fecha_year'] = df_merge['fecha'].dt.year
-    df_merge['fecha_month'] = df_merge['fecha'].dt.month
-    df_merge['fecha_day'] = df_merge['fecha'].dt.day
-    df_merge['fecha_dayofweek'] = df_merge['fecha'].dt.dayofweek
-    df_merge['fecha_dayofyear'] = df_merge['fecha'].dt.dayofyear
-    df_merge['fecha_weekend'] = [(x in [5,6])*1 for x in df_merge['fecha_dayofweek']]
+        df_merge = df_merge.merge(df_holidays_lagged, on=FIX_COLUMNS)
 
     # Remove location information
-    if not consider_province:
-        df_merge = df_merge.drop(columns=['Code provincia alpha', 'Code comunidad autónoma alpha'], errors='ignore').groupby('fecha').sum()
-        df_merge = df_merge.reset_index()
+    df_merge = df_merge.drop(columns=['Code provincia alpha', 'Code comunidad autónoma alpha'], errors='ignore').groupby('fecha').sum()
+    df_merge = df_merge.drop(columns=FIX_COLUMNS, errors='ignore')
+    df_merge = df_merge.dropna().reset_index(drop=True)
 
     # Train test split
-    df_merge = df_merge.dropna().reset_index(drop=True)
-    ## Last `PREDICTION_WINDOW` days
-    # df_test = df_merge.sort_values(['fecha']).groupby(['Code provincia alpha']).tail(PREDICTION_WINDOW)
-    # df_train = df_merge[~df_merge.index.isin(df_test.index)]
-    ## Random split
-    if consider_province:
-        prediction_window_ = PREDICTION_WINDOW*df_merge['Code provincia alpha'].nunique()
-        df_train, df_test = train_test_split(df_merge, test_size=prediction_window_, random_state=42, stratify=df_merge['Code provincia alpha'])
-    else:
-        df_train, df_test = train_test_split(df_merge, test_size=PREDICTION_WINDOW, random_state=42)
+    df_train, df_test = train_test_split(df_merge, test_size=PROPORTION_TEST, random_state=42)
+    X_train = df_train.drop(columns=TARGET_VARIABLE_2)
+    X_test = df_test.drop(columns=TARGET_VARIABLE_2)
+    y_train = df_train[TARGET_VARIABLE_2].reset_index(drop=True)
+    y_test = df_test[TARGET_VARIABLE_2].reset_index(drop=True)
 
-    X_train = df_train.drop(columns=TARGET_VARIABLE)
-    X_test = df_test.drop(columns=TARGET_VARIABLE)
-    y_train = df_train[TARGET_VARIABLE].reset_index(drop=True)
-    y_test = df_test[TARGET_VARIABLE].reset_index(drop=True)
-
-    # Dummies
-    if consider_province:
-        X_train_dummies = pd.get_dummies(X_train, columns = ['Code provincia alpha'], drop_first=True)
-    else:
-        X_train_dummies = X_train
-    X_train_dummies = X_train_dummies.drop(columns=fix_columns, errors='ignore')
     # Scaler
     scaler = StandardScaler()
-    X_tranformed = scaler.fit_transform(X_train_dummies)
-    X_train_dummies_scaled = pd.DataFrame(X_tranformed, columns=X_train_dummies.columns)
-
-    # Dummies
-    if consider_province:
-        X_test_dummies = pd.get_dummies(X_test, columns = ['Code provincia alpha'], drop_first=True)
-        X_test_dummies = X_test_dummies.reindex(columns = X_train_dummies.columns, fill_value=0)  # Ensure that I have all the columns in the `dummy`.
-    else:
-        X_test_dummies = X_test
-    X_test_dummies = X_test_dummies.drop(columns=fix_columns, errors='ignore')
-    # Scaler
-    X_tranformed = scaler.transform(X_test_dummies)
-    X_test_dummies_scaled = pd.DataFrame(X_tranformed, columns=X_test_dummies.columns)
+    X_tranformed = scaler.fit_transform(X_train)
+    X_train_scaled = pd.DataFrame(X_tranformed, columns=X_train.columns)
+    X_tranformed = scaler.transform(X_test)
+    X_test_scaled = pd.DataFrame(X_tranformed, columns=X_test.columns)
 
     # Regression model
-    X_train_dummies_scaled = sm.add_constant(X_train_dummies_scaled)
-    X_test_dummies_scaled = sm.add_constant(X_test_dummies_scaled, has_constant='add')
-    model = sm.OLS(y_train, X_train_dummies_scaled)
+    X_train_scaled = sm.add_constant(X_train_scaled)
+    X_test_scaled = sm.add_constant(X_test_scaled, has_constant='add')
+    model = sm.OLS(y_train, X_train_scaled)
+    results = model.fit()
+
+    # Filter by `p-value`
+    results_filtered = results.pvalues[results.pvalues.values<=P_VALUE]
+    results_filtered_col = results_filtered.keys()
+
+    # New model, after filter
+    model = sm.OLS(y_train, X_train_scaled[results_filtered_col])
     results = model.fit()
 
     # Predict
-    y_train_pred = results.predict(X_train_dummies_scaled)
-    y_test_pred = results.predict(X_test_dummies_scaled)
+    y_train_pred = results.predict(X_train_scaled[results_filtered_col])
+    y_test_pred = results.predict(X_test_scaled[results_filtered_col])
 
     # Append results
     # results.rsquared_adj
     df_combination = pd.DataFrame({
-        'Combination': [str(combination)], 
+        'Combination': str(combination), 
         'Combination length': len(combination), 
-        'Number of features': X_train.shape[1], 
+        'Number of features': len(results_filtered_col), #X_train.shape[1], 
         'R2 train': metrics.r2_score(y_train, y_train_pred), 
-        'R2 test': metrics.r2_score(y_test, y_test_pred)})
+        'R2 test': metrics.r2_score(y_test, y_test_pred)}, index=[0])
 
     df_coefficients = pd.DataFrame({
         'Combination': str(combination), 
@@ -203,14 +179,15 @@ def model_for_combination(combination, consider_province=False):
         'Coefficient': results.params.values, 
         'p-value': results.pvalues.values})
         
-    return df_combination, df_coefficients, combination, model, results, X_train_dummies_scaled, y_train, X_test_dummies_scaled, y_test
+    return df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test
 
 # %%
 ### Run ----
 df_all_combinations, df_all_coefficients = pd.DataFrame(), pd.DataFrame()
 
 for combination in all_combinations:
-    df_combination, df_coefficients = model_for_combination(combination, False)[0:2]
+    print(f'Calculating: {str(combination)}')
+    df_combination, df_coefficients = model_for_combination(combination)[0:2]
     df_all_combinations = df_all_combinations.append(df_combination, ignore_index=True)
     df_all_coefficients = df_all_coefficients.append(df_coefficients, ignore_index=True)
 
@@ -218,25 +195,87 @@ for combination in all_combinations:
 ## Coefficients table ----
 # TODO: Beta coeff. viz or table (comparison between variable groups)	0,2
 df_all_coefficients_pivot = pd.pivot(df_all_coefficients, index=['Combination'], columns=['Feature'], values=['Coefficient'])
-df_all_coefficients_pivot
+# df_all_coefficients_pivot
 
 # %%
 ### Sort values ----
-pd.set_option('display.max_rows', 100)
+# pd.set_option('display.max_rows', 100)
 df_all_combinations = df_all_combinations.sort_values(by=['R2 test', 'Combination length'], ascending=[False, True])
-df_all_combinations
+df_all_combinations.head(20)
 
+# %%
 t1 = df_all_combinations[df_all_combinations['Combination length'] == 1]
-t2 = df_all_combinations[(df_all_combinations['Combination length'] == 2) & (['casos_uci' in x for x in df_all_combinations['Combination']])]
-t3 = df_all_combinations[(df_all_combinations['Combination length'] == 3) & (['casos_uci' in x for x in df_all_combinations['Combination']])]
+t2 = df_all_combinations[(df_all_combinations['Combination length'] == 2) & (['googletrends' in x for x in df_all_combinations['Combination']])]
+t3 = df_all_combinations[(df_all_combinations['Combination length'] == 3) & (['googletrends' in x for x in df_all_combinations['Combination']])]
 
 # %%
 ### Coefficients per case ----
-df_all_coefficients_pivot[df_all_coefficients_pivot.index.isin(t2['Combination'])].dropna(how='all').T
+# df_all_coefficients_pivot[df_all_coefficients_pivot.index.isin(t1['Combination'])].dropna(how='all').T
 
 # %%
 ### Testing ----
-_, _, _, _, _, X_train_dummies_scaled, y_train, X_test_dummies_scaled, y_test = model_for_combination(('mscbs', 'holidays'), False)
+df_combination, df_coefficients, _, _, _, X_train_dummies_scaled, y_train, X_test_dummies_scaled, y_test = model_for_combination(('casos_uci', 'casos', 'googletrends'), False)
+df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
+
+df_coefficients.plot.barh(x='Feature', y='Coefficient', figsize=[10,20]).invert_yaxis()
+# df_coefficients_filtered = df_coefficients[df_coefficients['p-value']<=0.05]
+# df_coefficients_filtered.plot.barh(x='Feature', y='Coefficient', figsize=[10,20]).invert_yaxis()
+
+# _, _, _, _, _, X_train_dummies_scaled, y_train, X_test_dummies_scaled, y_test = model_for_combination(('mscbs', 'holidays'), False)
+
+# %%
+# Filter
+df_coefficients_filtered = df_coefficients[df_coefficients['p-value']<=0.05]
+
+# Data filtered
+X_train = X_train_dummies_scaled[df_coefficients_filtered['Feature']]
+X_test = X_test_dummies_scaled[df_coefficients_filtered['Feature']]
+
+# Regression model
+model = sm.OLS(y_train, X_train)
+results = model.fit()
+
+# Predict
+y_train_pred = results.predict(X_train)
+y_test_pred = results.predict(X_test)
+
+# Append results
+# results.rsquared_adj
+df_combination = pd.DataFrame({
+    'Number of features': [X_train.shape[1]], 
+    'R2 train': [metrics.r2_score(y_train, y_train_pred)], 
+    'R2 test': [metrics.r2_score(y_test, y_test_pred)]})
+
+df_coefficients = pd.DataFrame({
+    'Feature': results.pvalues.keys(),
+    'Coefficient': results.params.values, 
+    'p-value': results.pvalues.values})
+
+# %%
+df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
+df_coefficients.plot.barh(x='Feature', y='Coefficient', figsize=[10,20]).invert_yaxis()
+
+# %%
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def corrdot(*args, **kwargs):
+    corr_r = args[0].corr(args[1], 'pearson')
+    corr_text = f"{corr_r:2.2f}".replace("0.", ".")
+    ax = plt.gca()
+    ax.set_axis_off()
+    marker_size = abs(corr_r) * 10000
+    ax.scatter([.5], [.5], marker_size, [corr_r], alpha=0.6, cmap="coolwarm",
+               vmin=-1, vmax=1, transform=ax.transAxes)
+    font_size = abs(corr_r) * 40 + 5
+    ax.annotate(corr_text, [.5, .5,],  xycoords="axes fraction",
+                ha='center', va='center', fontsize=font_size)
+
+sns.set(style='white', font_scale=1.6)
+g = sns.PairGrid(X_train.iloc[:, 0:5], aspect=1.4, diag_sharey=False)
+g.map_lower(sns.regplot, lowess=True, ci=False, line_kws={'color': 'black'})
+g.map_diag(sns.distplot, kde_kws={'color': 'black'})
+g.map_upper(corrdot)
 
 # %%
 # https://planspace.org/20150423-forward_selection_with_statsmodels/
