@@ -48,13 +48,13 @@ TARGET_VARIABLE_1 = 'ratio_population__num_def__lag_-7'
 TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
 LAG_TARGET = [-7]
 LAG_UCI = [0, 7, 14, 21]
-LAG_CASOS = [0, 7, 14, 21]
-LAG_OTHER = [0, 7, 14, 21]
-LAG_MAX = max(LAG_UCI+LAG_CASOS+LAG_OTHER)
+# LAG_UCI = range(0, 22)
+LAG_CASOS = LAG_UCI
+LAG_OTHER = LAG_UCI
 SEED = 42
-PREDICTION_WINDOW = 7
 PROPORTION_TEST = 0.3
 FIX_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
+SOURCES = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
 P_VALUE = 0.05
 
 # %%
@@ -98,14 +98,9 @@ df_holidays_lagged = helpers.add_prefix(df_holidays_lagged, 'holidays__', FIX_CO
 
 # %%
 ## All possible column combinations ----
-# 'casos_uci', 'casos', 
-sources = ['aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
 all_combinations = []
-for i in range(1, len(sources)+1):
-    all_combinations = all_combinations + list(itertools.combinations(sources, i))
-
-combination = ('casos_uci', 'casos', 'googletrends')
-p_value=0.05
+for i in range(1, len(SOURCES)+1):
+    all_combinations = all_combinations + list(itertools.combinations(SOURCES, i))
 
 ## Calculate model for combination ----
 def model_for_combination(combination):
@@ -152,13 +147,15 @@ def model_for_combination(combination):
     model = sm.OLS(y_train, X_train_scaled)
     results = model.fit()
 
-    # Filter by `p-value`
-    results_filtered = results.pvalues[results.pvalues.values<=P_VALUE]
-    results_filtered_col = results_filtered.keys()
+    # Ensure to remove all the non-significant variables
+    for _ in range(0, 5):
+        # Filter by `p-value`
+        results_filtered = results.pvalues[results.pvalues.values<=P_VALUE]
+        results_filtered_col = results_filtered.keys()
 
-    # New model, after filter
-    model = sm.OLS(y_train, X_train_scaled[results_filtered_col])
-    results = model.fit()
+        # New model, after filter
+        model = sm.OLS(y_train, X_train_scaled[results_filtered_col])
+        results = model.fit()
 
     # Predict
     y_train_pred = results.predict(X_train_scaled[results_filtered_col])
@@ -170,7 +167,7 @@ def model_for_combination(combination):
         'Combination': str(combination), 
         'Combination length': len(combination), 
         'Number of features': len(results_filtered_col), #X_train.shape[1], 
-        'R2 train': metrics.r2_score(y_train, y_train_pred), 
+        'R2 train': results.rsquared_adj, 
         'R2 test': metrics.r2_score(y_test, y_test_pred)}, index=[0])
 
     df_coefficients = pd.DataFrame({
@@ -213,47 +210,23 @@ t3 = df_all_combinations[(df_all_combinations['Combination length'] == 3) & (['g
 # df_all_coefficients_pivot[df_all_coefficients_pivot.index.isin(t1['Combination'])].dropna(how='all').T
 
 # %%
-### Testing ----
-df_combination, df_coefficients, _, _, _, X_train_dummies_scaled, y_train, X_test_dummies_scaled, y_test = model_for_combination(('casos_uci', 'casos', 'googletrends'), False)
+import seaborn as sns
+import numpy as np
+
+def colors_from_values(values, palette_name):
+    # normalize the values to range [0, 1]
+    normalized = (values - min(values)) / (max(values) - min(values))
+    # convert to indices
+    indices = np.round(normalized * (len(values) - 1)).astype(np.int32)
+    # use the indices to get the colors
+    palette = sns.color_palette(palette_name, len(values))
+    return np.array(palette).take(indices, axis=0)
+
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('casos_uci', 'casos', 'googletrends', 'mscbs'))
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
-df_coefficients.plot.barh(x='Feature', y='Coefficient', figsize=[10,20]).invert_yaxis()
-# df_coefficients_filtered = df_coefficients[df_coefficients['p-value']<=0.05]
-# df_coefficients_filtered.plot.barh(x='Feature', y='Coefficient', figsize=[10,20]).invert_yaxis()
-
-# _, _, _, _, _, X_train_dummies_scaled, y_train, X_test_dummies_scaled, y_test = model_for_combination(('mscbs', 'holidays'), False)
-
-# %%
-# Filter
-df_coefficients_filtered = df_coefficients[df_coefficients['p-value']<=0.05]
-
-# Data filtered
-X_train = X_train_dummies_scaled[df_coefficients_filtered['Feature']]
-X_test = X_test_dummies_scaled[df_coefficients_filtered['Feature']]
-
-# Regression model
-model = sm.OLS(y_train, X_train)
-results = model.fit()
-
-# Predict
-y_train_pred = results.predict(X_train)
-y_test_pred = results.predict(X_test)
-
-# Append results
-# results.rsquared_adj
-df_combination = pd.DataFrame({
-    'Number of features': [X_train.shape[1]], 
-    'R2 train': [metrics.r2_score(y_train, y_train_pred)], 
-    'R2 test': [metrics.r2_score(y_test, y_test_pred)]})
-
-df_coefficients = pd.DataFrame({
-    'Feature': results.pvalues.keys(),
-    'Coefficient': results.params.values, 
-    'p-value': results.pvalues.values})
-
-# %%
-df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
-df_coefficients.plot.barh(x='Feature', y='Coefficient', figsize=[10,20]).invert_yaxis()
+plt.figure(figsize=[10,20])
+sns.barplot(x='Coefficient', y='Feature', palette=colors_from_values(df_coefficients['p-value'], "YlOrRd"), data=df_coefficients)
 
 # %%
 import matplotlib.pyplot as plt
