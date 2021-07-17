@@ -52,13 +52,16 @@ for kw_list in kw_lists:
                 df = df.reset_index()
                 df['geo'] = geo_
                 df['ca'] = ca
-                df = pd.melt(df, id_vars=['date', 'geo', 'ca'], value_vars=kw_list)
-                df_append = df_append.append(df, ignore_index=True)
+                if df.shape[0] > 0:
+                    df = pd.melt(df, id_vars=['date', 'geo', 'ca'], value_vars=kw_list)
+                    df_append = df_append.append(df, ignore_index=True)
+                else:
+                    print('error', kw_list, geo_)
                 break
 
 # %%
 dump(df_append, 'storage/df_temp_googletrends.joblib') 
-# df_append = load('storage/df_temp_googletrends.joblib')
+df_append = load('storage/df_temp_googletrends.joblib')
 
 # %%
 ## Weekly to daily data ----
@@ -100,5 +103,36 @@ df3 = df3.drop(columns=['ca'])
 df3 = df3.rename({'date': 'fecha'}, axis=1)
 
 dump(df3, 'storage/df_export_googletrends_lm.joblib') 
+
+# %%
+## Grouping keywords ----
+
+keyword_dict = {
+    'behavior': ['paliativos', 'ambulancia', 'cementerio', 'tanatorio', 'hospital'],
+    'symptom': ['enferma', 'enfermo', 'dolor', 'entubado', 'respiración asistida', 'enfermo terminal', 'temperatura', 'fiebre', 'uci', 'infectados', 'muerte'],
+    'policy': ['confinamiento', 'vacuna', 'janssen', 'astrazeneca', 'pfizer', 'pandemia', 'coronavirus', 'covid'],
+}
+
+keyword_df = pd.DataFrame({'group': 'behavior', 'variable': keyword_dict['behavior']})
+keyword_df = keyword_df.append(pd.DataFrame({'group': 'symptom', 'variable': keyword_dict['symptom']}), ignore_index=True)
+keyword_df = keyword_df.append(pd.DataFrame({'group': 'policy', 'variable': keyword_dict['policy']}), ignore_index=True)
+
+df_merged = df_append.merge(keyword_df, on = 'variable')
+df_merged = pd.pivot_table(df_merged, index=['date', 'ca'], columns=['group'], values=['value'], aggfunc=np.sum)
+df_merged.columns = [x[1] for x in df_merged.columns.to_flat_index()]
+df_merged = df_merged.reset_index()
+
+df_merged = df_merged.merge(province_, left_on='ca', right_on='Code comunidad autónoma alpha')
+df_merged = df_merged.reset_index(drop=True)
+
+df_merged = df_merged.drop(columns=['ca'])
+df_merged = df_merged.rename({'date': 'fecha'}, axis=1)
+
+df_resampled = (df_merged.set_index('fecha')  # Only can be dates
+          .groupby(['Code comunidad autónoma alpha', 'Code provincia alpha'])['behavior', 'symptom', 'policy']  # The rest of the indexes
+          .resample('d')
+          .interpolate(limit_direction='both')
+          .reset_index()
+         )
 
 # %%

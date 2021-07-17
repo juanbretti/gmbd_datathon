@@ -49,17 +49,17 @@ import statsmodels.api as sm
 # %%
 ## Constants ----
 LAG_TARGET = [-7]
-LAG_UCI = [1, 7, 14]
-LAG_CASOS = range(0, 30, 10)
-LAG_OTHER = range(0, 30, 5)
-TARGET_VARIABLE_0 = 'ratio_population__num_casos'
+LAG_UCI = [1, 7, 14, 21]
+LAG_CASOS = [0, 7, 14, 21]
+LAG_OTHER = [10, 20, 30]
+TARGET_VARIABLE_0 = 'ratio_population__num_def'
 TARGET_VARIABLE_1 = f'{TARGET_VARIABLE_0}__lag_{LAG_TARGET[0]}'
 TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
 SEED = 42
 PROPORTION_TEST = 0.3
 FIX_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
 SOURCES = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
-MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__ratio_population__num_casos__lag_-7', 'googletrends__confinamiento__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15', 'casos__ratio_population__num_casos__lag_10']
+MANUAL_COLUMNS = MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__ratio_population__num_def__lag_-7', 'casos_uci__ratio_population__num_uci__lag_7', 'casos_uci__ratio_population__num_uci__lag_14', 'casos_uci__ratio_population__num_casos__lag_14', 'casos_uci__ratio_population__num_casos__lag_21', 'casos_uci__ratio_population__num_hosp__lag_14', 'casos__ratio_population__num_casos_prueba_pcr__lag_14', 'casos__ratio_population__num_casos_prueba_test_ac__lag_14', 'casos__ratio_population__num_casos_prueba_ag__lag_14', 'casos__ratio_population__num_casos_prueba_pcr__lag_21', 'casos__ratio_population__num_casos_prueba_test_ac__lag_21', 'casos__ratio_population__num_casos_prueba_ag__lag_21', 'googletrends__muerte__lag_10', 'googletrends__edema__lag_10', 'googletrends__cementerio__lag_10', 'googletrends__tanatorio__lag_10', 'googletrends__paliativos__lag_20', 'googletrends__entubado__lag_20', 'googletrends__enfermo terminal__lag_20', 'googletrends__coronavirus__lag_30', 'googletrends__confinamiento__lag_30', 'googletrends__enfermo__lag_30']
 P_VALUE = 0.05
 
 # %%
@@ -243,7 +243,7 @@ def colors_from_values(values, palette_name):
     return np.array(palette).take(indices, axis=0)
 
 # 'casos_uci', 'casos', 
-df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('googletrends', 'casos'), MANUAL_COLUMNS)
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('casos', 'googletrends'), MANUAL_COLUMNS)
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
 plt.figure(figsize=[6,10])

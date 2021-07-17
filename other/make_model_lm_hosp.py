@@ -49,17 +49,17 @@ import statsmodels.api as sm
 # %%
 ## Constants ----
 LAG_TARGET = [-7]
-LAG_UCI = [1, 7, 14, 21]
-LAG_CASOS = [0, 7, 14, 21]
-LAG_OTHER = [10, 20, 30]
-TARGET_VARIABLE_0 = 'ratio_population__num_def'
+LAG_UCI = [1, 7, 14]
+LAG_CASOS = range(0, 30, 7)
+LAG_OTHER = range(0, 30, 7)
+TARGET_VARIABLE_0 = 'ratio_population__num_hosp'
 TARGET_VARIABLE_1 = f'{TARGET_VARIABLE_0}__lag_{LAG_TARGET[0]}'
 TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
 SEED = 42
 PROPORTION_TEST = 0.3
 FIX_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
 SOURCES = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
-MANUAL_COLUMNS = MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__ratio_population__num_def__lag_-7', 'casos_uci__ratio_population__num_uci__lag_7', 'casos_uci__ratio_population__num_uci__lag_14', 'casos_uci__ratio_population__num_casos__lag_14', 'casos_uci__ratio_population__num_casos__lag_21', 'casos_uci__ratio_population__num_hosp__lag_14', 'casos__ratio_population__num_casos_prueba_pcr__lag_14', 'casos__ratio_population__num_casos_prueba_test_ac__lag_14', 'casos__ratio_population__num_casos_prueba_ag__lag_14', 'casos__ratio_population__num_casos_prueba_pcr__lag_21', 'casos__ratio_population__num_casos_prueba_test_ac__lag_21', 'casos__ratio_population__num_casos_prueba_ag__lag_21', 'googletrends__muerte__lag_10', 'googletrends__edema__lag_10', 'googletrends__cementerio__lag_10', 'googletrends__tanatorio__lag_10', 'googletrends__paliativos__lag_20', 'googletrends__entubado__lag_20', 'googletrends__enfermo terminal__lag_20', 'googletrends__coronavirus__lag_30', 'googletrends__confinamiento__lag_30', 'googletrends__enfermo__lag_30']
+MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__ratio_population__num_hosp__lag_-7', 'googletrends__confinamiento__lag_0', 'googletrends__dolor__lag_0',  'googletrends__entubado__lag_0', 'googletrends__confinamiento__lag_28', 'casos__ratio_population__num_casos_prueba_test_ac__lag_0', 'googletrends__infectados__lag_28', 'casos__ratio_population__num_casos__lag_0']
 P_VALUE = 0.05
 
 # %%
@@ -201,10 +201,13 @@ for i in range(1, len(SOURCES)+1):
 df_all_combinations, df_all_coefficients = pd.DataFrame(), pd.DataFrame()
 
 for combination in all_combinations:
-    print(f'Calculating: {str(combination)}')
-    df_combination, df_coefficients = model_for_combination(combination)[0:2]
-    df_all_combinations = df_all_combinations.append(df_combination, ignore_index=True)
-    df_all_coefficients = df_all_coefficients.append(df_coefficients, ignore_index=True)
+    try:
+        print(f'Calculating: {str(combination)}')
+        df_combination, df_coefficients = model_for_combination(combination)[0:2]
+        df_all_combinations = df_all_combinations.append(df_combination, ignore_index=True)
+        df_all_coefficients = df_all_coefficients.append(df_coefficients, ignore_index=True)
+    except:
+        print(f'Error: {str(combination)}')
 
 # %%
 ## Coefficients table ----
@@ -240,11 +243,13 @@ def colors_from_values(values, palette_name):
     return np.array(palette).take(indices, axis=0)
 
 # 'casos_uci', 'casos', 
-df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('casos', 'googletrends'), MANUAL_COLUMNS)
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('googletrends', 'casos'), MANUAL_COLUMNS)
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
 plt.figure(figsize=[6,10])
 sns.barplot(x='Coefficient', y='Feature', palette=colors_from_values(df_coefficients['p-value'], "YlOrRd"), data=df_coefficients)
+
+df_combination
 
 # %%
 ## Correlation plot ----
@@ -282,69 +287,5 @@ ProfileReport_setup = {
 # ProfileReport(df_mitma, title="df_mitma", **ProfileReport_setup).to_widgets()
 # ProfileReport(df_mscbs, title="df_mscbs", **ProfileReport_setup).to_widgets()
 # ProfileReport(df_holidays, title="df_holidays", **ProfileReport_setup).to_widgets()
-
-# %%
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# %%
-## SequentialFeatureSelector ----
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.feature_selection import RFECV
-
-# Build the model
-rfr = RandomForestRegressor(random_state=SEED, max_features=None, n_estimators=100, n_jobs=-1)
-fs = RFECV(rfr, step=50, n_jobs=-1, scoring='r2', cv=4)
-
-start_time = helpers.timer(None)
-fs.fit(X_train_dummies_scaled, y_train)
-helpers.timer(start_time)
-
-# %%
-### Metric calculation ----
-y_train_pred = fs.predict(X_train_dummies_scaled)
-y_test_pred = fs.predict(X_test_dummies_scaled)
-helpers.metrics_custom2(y_train, y_train_pred, y_test, y_test_pred)
-
-# %%
-# Number of features
-fs.n_features_
-
-# %%
-ax = pd.DataFrame({'test': y_test.to_list(), 'pred': y_test_pred.tolist()}).plot(x='test', y='pred', kind='scatter')
-ax.axline([0, 0], [1, 1])
-plt.show()
-
-# %%
-## Feature importance ----
-### Standard plot ----
-# https://stackoverflow.com/a/51520906/3780957
-feat_importances = pd.Series(fs.estimator_.feature_importances_, index=X_train_dummies_scaled.columns[fs.support_])
-feat_importances.nlargest(20).plot(kind='barh').invert_yaxis()
-
-# %%
-### Shap ----
-import shap
-explainer = shap.TreeExplainer(fs.estimator_)
-shap_values = explainer.shap_values(X_train_dummies_scaled)
-shap.summary_plot(shap_values, X_train_dummies_scaled, plot_type="bar")
-
-# %%
-X_test_shap = X_train_dummies_scaled.loc[:, fs.support_]
-explainer = shap.KernelExplainer(fs.estimator_.predict, X_test_shap)
-shap_values = explainer.shap_values(X_test_shap, approximate=False, check_additivity=False)
-shap.summary_plot(shap_values, X_test_shap)
 
 # %%
