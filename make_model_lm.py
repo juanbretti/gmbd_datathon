@@ -32,6 +32,7 @@ import helpers
 # Plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pandas_profiling import ProfileReport
 
 # Model
 from sklearn.pipeline import make_pipeline
@@ -44,17 +45,18 @@ import statsmodels.api as sm
 
 # %%
 ## Constants ----
-TARGET_VARIABLE_1 = 'ratio_population__num_def__lag_-7'
-TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
 LAG_TARGET = [-7]
-LAG_UCI = [0, 7, 14, 21]
-# LAG_UCI = range(0, 22)
-LAG_CASOS = LAG_UCI
-LAG_OTHER = LAG_UCI
+LAG_UCI = [1, 7, 14, 21]
+LAG_CASOS = [0, 7, 14, 21]
+LAG_OTHER = [10, 20, 30]
+TARGET_VARIABLE_0 = 'ratio_population__num_def'
+TARGET_VARIABLE_1 = f'{TARGET_VARIABLE_0}__lag_{LAG_TARGET[0]}'
+TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
 SEED = 42
 PROPORTION_TEST = 0.3
 FIX_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
 SOURCES = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
+MANUAL_COLUMNS = MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__ratio_population__num_def__lag_-7', 'casos_uci__ratio_population__num_uci__lag_7', 'casos_uci__ratio_population__num_uci__lag_14', 'casos_uci__ratio_population__num_casos__lag_14', 'casos_uci__ratio_population__num_casos__lag_21', 'casos_uci__ratio_population__num_hosp__lag_14', 'casos__ratio_population__num_casos_prueba_pcr__lag_14', 'casos__ratio_population__num_casos_prueba_test_ac__lag_14', 'casos__ratio_population__num_casos_prueba_ag__lag_14', 'casos__ratio_population__num_casos_prueba_pcr__lag_21', 'casos__ratio_population__num_casos_prueba_test_ac__lag_21', 'casos__ratio_population__num_casos_prueba_ag__lag_21', 'googletrends__muerte__lag_10', 'googletrends__edema__lag_10', 'googletrends__cementerio__lag_10', 'googletrends__tanatorio__lag_10', 'googletrends__paliativos__lag_20', 'googletrends__entubado__lag_20', 'googletrends__enfermo terminal__lag_20', 'googletrends__coronavirus__lag_30', 'googletrends__confinamiento__lag_30', 'googletrends__enfermo__lag_30']
 P_VALUE = 0.05
 
 # %%
@@ -74,7 +76,7 @@ df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS
 df_casos_uci_target = df_casos_uci_lagged[FIX_COLUMNS+[TARGET_VARIABLE_1]]
 df_casos_uci_target = helpers.add_prefix(df_casos_uci_target, 'casos_uci_target__', FIX_COLUMNS)
 ### Death age groups ----
-df_casos_uci = df_casos_uci.drop(columns=['ratio_population__num_def'])
+# df_casos_uci_ = df_casos_uci.drop(columns=[TARGET_VARIABLE_0])
 df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS, LAG_UCI)
 df_casos_uci_lagged = helpers.add_prefix(df_casos_uci_lagged, 'casos_uci__', FIX_COLUMNS)
 ### Cases tested ----
@@ -97,13 +99,8 @@ df_holidays_lagged = helpers.shift_timeseries_by_lags(df_holidays, FIX_COLUMNS, 
 df_holidays_lagged = helpers.add_prefix(df_holidays_lagged, 'holidays__', FIX_COLUMNS)
 
 # %%
-## All possible column combinations ----
-all_combinations = []
-for i in range(1, len(SOURCES)+1):
-    all_combinations = all_combinations + list(itertools.combinations(SOURCES, i))
-
 ## Calculate model for combination ----
-def model_for_combination(combination):
+def model_for_combination(combination, manual_column=None):
 
     # Merge the datasources
     df_merge = df_casos_uci_target.copy()
@@ -121,6 +118,10 @@ def model_for_combination(combination):
         df_merge = df_merge.merge(df_mscbs_lagged, on=FIX_COLUMNS)
     if 'holidays' in combination:
         df_merge = df_merge.merge(df_holidays_lagged, on=FIX_COLUMNS)
+
+    # Best business explanatory columns
+    if manual_column is not None:
+        df_merge = df_merge.loc[:, df_merge.columns.isin(manual_column)]
 
     # Remove location information
     df_merge = df_merge.drop(columns=['Code provincia alpha', 'Code comunidad autónoma alpha'], errors='ignore').groupby('fecha').sum()
@@ -158,15 +159,17 @@ def model_for_combination(combination):
         results = model.fit()
 
     # Predict
-    y_train_pred = results.predict(X_train_scaled[results_filtered_col])
+    # y_train_pred = results.predict(X_train_scaled[results_filtered_col])
     y_test_pred = results.predict(X_test_scaled[results_filtered_col])
+    # y_test_pred = results.predict(X_test_scaled)
 
     # Append results
     # results.rsquared_adj
     df_combination = pd.DataFrame({
         'Combination': str(combination), 
         'Combination length': len(combination), 
-        'Number of features': len(results_filtered_col), #X_train.shape[1], 
+        'Number of features': len(results_filtered_col),
+        # 'Number of features': X_test_scaled.shape[1], 
         'R2 train': results.rsquared_adj, 
         'R2 test': metrics.r2_score(y_test, y_test_pred)}, index=[0])
 
@@ -179,6 +182,11 @@ def model_for_combination(combination):
     return df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test
 
 # %%
+## All possible column combinations ----
+all_combinations = []
+for i in range(1, len(SOURCES)+1):
+    all_combinations = all_combinations + list(itertools.combinations(SOURCES, i))
+
 ### Run ----
 df_all_combinations, df_all_coefficients = pd.DataFrame(), pd.DataFrame()
 
@@ -201,6 +209,7 @@ df_all_combinations = df_all_combinations.sort_values(by=['R2 test', 'Combinatio
 df_all_combinations.head(20)
 
 # %%
+### Selection of some candidates ----
 t1 = df_all_combinations[df_all_combinations['Combination length'] == 1]
 t2 = df_all_combinations[(df_all_combinations['Combination length'] == 2) & (['googletrends' in x for x in df_all_combinations['Combination']])]
 t3 = df_all_combinations[(df_all_combinations['Combination length'] == 3) & (['googletrends' in x for x in df_all_combinations['Combination']])]
@@ -210,9 +219,7 @@ t3 = df_all_combinations[(df_all_combinations['Combination length'] == 3) & (['g
 # df_all_coefficients_pivot[df_all_coefficients_pivot.index.isin(t1['Combination'])].dropna(how='all').T
 
 # %%
-import seaborn as sns
-import numpy as np
-
+## Coefficient plot ----
 def colors_from_values(values, palette_name):
     # normalize the values to range [0, 1]
     normalized = (values - min(values)) / (max(values) - min(values))
@@ -222,36 +229,64 @@ def colors_from_values(values, palette_name):
     palette = sns.color_palette(palette_name, len(values))
     return np.array(palette).take(indices, axis=0)
 
-df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('casos_uci', 'casos', 'googletrends', 'mscbs'))
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('casos_uci', 'casos', 'googletrends'), MANUAL_COLUMNS)
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
-plt.figure(figsize=[10,20])
+plt.figure(figsize=[6,10])
 sns.barplot(x='Coefficient', y='Feature', palette=colors_from_values(df_coefficients['p-value'], "YlOrRd"), data=df_coefficients)
 
 # %%
-import matplotlib.pyplot as plt
-import seaborn as sns
+## Correlation plot ----
+def corrplot_simple(d, title):
+    sns.set_theme(style="white")
+    corr = d.corr()
+    # Generate a mask for the upper triangle
+    mask = np.triu(np.ones_like(corr, dtype=bool))
+    # Set up the matplotlib figure
+    f, ax = plt.subplots(figsize=(11, 9))
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(230, 20, as_cmap=True)
+    # Draw the heatmap with the mask and correct aspect ratio
+    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3, center=0, square=True, linewidths=.5, cbar_kws={"shrink": .5}).set_title(title)
 
-def corrdot(*args, **kwargs):
-    corr_r = args[0].corr(args[1], 'pearson')
-    corr_text = f"{corr_r:2.2f}".replace("0.", ".")
-    ax = plt.gca()
-    ax.set_axis_off()
-    marker_size = abs(corr_r) * 10000
-    ax.scatter([.5], [.5], marker_size, [corr_r], alpha=0.6, cmap="coolwarm",
-               vmin=-1, vmax=1, transform=ax.transAxes)
-    font_size = abs(corr_r) * 40 + 5
-    ax.annotate(corr_text, [.5, .5,],  xycoords="axes fraction",
-                ha='center', va='center', fontsize=font_size)
-
-sns.set(style='white', font_scale=1.6)
-g = sns.PairGrid(X_train.iloc[:, 0:5], aspect=1.4, diag_sharey=False)
-g.map_lower(sns.regplot, lowess=True, ci=False, line_kws={'color': 'black'})
-g.map_diag(sns.distplot, kde_kws={'color': 'black'})
-g.map_upper(corrdot)
+# TODO: Think about a `zip` or `exec`
+df_list = [df_casos_uci, df_casos_uci_lagged, df_casos_lagged, df_aemet_lagged, df_googletrends_lagged, df_mitma_lagged, df_mscbs_lagged, df_holidays_lagged]
+[corrplot_simple(pd.concat([df_casos_uci_target, x], axis=1), None) for x in df_list]
 
 # %%
-# https://planspace.org/20150423-forward_selection_with_statsmodels/
+## ProfileReport ----
+ProfileReport_setup = {
+    'samples': None,
+    'correlations': None,
+    'missing_diagrams': None,
+    'duplicates': None,
+    'interactions': None,
+    'explorative': False,
+}
+
+# ProfileReport(df_casos_uci, title="df_casos_uci", **ProfileReport_setup).to_widgets()
+# ProfileReport(df_casos, title="df_casos", **ProfileReport_setup).to_widgets()
+# ProfileReport(df_aemet, title="df_aemet", **ProfileReport_setup).to_widgets()
+# ProfileReport(df_googletrends, title="df_googletrends", **ProfileReport_setup).to_widgets()
+# ProfileReport(df_mitma, title="df_mitma", **ProfileReport_setup).to_widgets()
+# ProfileReport(df_mscbs, title="df_mscbs", **ProfileReport_setup).to_widgets()
+# ProfileReport(df_holidays, title="df_holidays", **ProfileReport_setup).to_widgets()
+
+# %%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # %%
 ## SequentialFeatureSelector ----

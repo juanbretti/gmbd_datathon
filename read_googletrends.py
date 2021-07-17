@@ -26,10 +26,12 @@ province_code = helpers.province_code()
 ## Get information from `Google Trends`
 kw_lists = [["coronavirus", "covid", "confinamiento", "vacuna"],
             ["astrazeneca", "janssen", "infectados", "muerte"],
-            ["temperatura", "fiebre", "edema"],
+            ["temperatura", "fiebre", "cementerio"],
             ["pandemia", "toque de queda", "tos"],
             ["sars", "enfermo", 'enferma'],
-            ["pfizer", "hospital", "dolor", "tanatorio"]]
+            ["pfizer", "hospital", "dolor", "tanatorio"],
+            ['enfermo terminal', 'uci', 'entubado', 'respiración asistida'],
+            ['ambulancia', 'paliativos']]
 df_append = pd.DataFrame()
 pytrends = TrendReq(hl='en-US', tz=360)  
 
@@ -55,8 +57,8 @@ for kw_list in kw_lists:
                 break
 
 # %%
-# dump(df_append, 'storage/df_temp_googletrends.joblib') 
-df_append = load('storage/df_temp_googletrends.joblib')
+dump(df_append, 'storage/df_temp_googletrends.joblib') 
+# df_append = load('storage/df_temp_googletrends.joblib')
 
 # %%
 ## Weekly to daily data ----
