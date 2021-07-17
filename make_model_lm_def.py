@@ -280,13 +280,13 @@ ProfileReport_setup = {
     'explorative': True,
 }
 
-ProfileReport(df_googletrends, title="df_googletrends", **ProfileReport_setup, minimal=True).to_file("report/df_googletrends_minimal.html")
-ProfileReport(df_mitma, title="df_mitma", **ProfileReport_setup, minimal=True).to_file("report/df_mitma_minimal.html")
-ProfileReport(df_aemet, title="df_aemet", **ProfileReport_setup, minimal=True).to_file("report/df_aemet_minimal.html")
+# ProfileReport(df_googletrends, title="df_googletrends", **ProfileReport_setup, minimal=True).to_file("report/df_googletrends_minimal.html")
+# ProfileReport(df_mitma, title="df_mitma", **ProfileReport_setup, minimal=True).to_file("report/df_mitma_minimal.html")
+# ProfileReport(df_aemet, title="df_aemet", **ProfileReport_setup, minimal=True).to_file("report/df_aemet_minimal.html")
 
-ProfileReport(df_casos_uci, title="df_casos_uci", **ProfileReport_setup).to_file("report/df_casos_uci.html")
-ProfileReport(df_casos, title="df_casos", **ProfileReport_setup).to_file("report/df_casos.html")
-ProfileReport(df_mscbs, title="df_mscbs", **ProfileReport_setup).to_file("report/df_mscbs.html")
-ProfileReport(df_holidays, title="df_holidays", **ProfileReport_setup).to_file("report/df_holidays.html")
+# ProfileReport(df_casos_uci, title="df_casos_uci", **ProfileReport_setup).to_file("report/df_casos_uci.html")
+# ProfileReport(df_casos, title="df_casos", **ProfileReport_setup).to_file("report/df_casos.html")
+# ProfileReport(df_mscbs, title="df_mscbs", **ProfileReport_setup).to_file("report/df_mscbs.html")
+# ProfileReport(df_holidays, title="df_holidays", **ProfileReport_setup).to_file("report/df_holidays.html")
 
 # %%
