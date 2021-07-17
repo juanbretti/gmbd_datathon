@@ -3,15 +3,18 @@
 # Analytical Design (10%)
 # TODO: Coherence use case	0,05
 # TODO: Business needs	0,05
+
 # Data understanding and data processing (10%)
 # TODO: Data processing pipeline diagram	0,05
 # TODO: More than one external data source	0,05
+
 # Analysis and models (60%)
 # TODO: Exploratory data analysis	0,1
 # TODO: Use of whole period	0,1
 # TODO: Expl. model R2	0,1
 # TODO: Beta coeff. viz or table (comparison between variable groups)	0,2
 # TODO: Predictive model R2	0,1
+
 # Presentation & Report (20%)
 # TODO: Present. Quality	0,1
 # TODO: Report Quality	0,1
@@ -75,28 +78,36 @@ df_holidays = load('storage/df_export_holidays_lm.joblib')
 df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS, LAG_TARGET)
 df_casos_uci_target = df_casos_uci_lagged[FIX_COLUMNS+[TARGET_VARIABLE_1]]
 df_casos_uci_target = helpers.add_prefix(df_casos_uci_target, 'casos_uci_target__', FIX_COLUMNS)
+df_casos_uci_target = helpers.remove_location(df_casos_uci_target, 'sum')
 ### Death age groups ----
 # df_casos_uci_ = df_casos_uci.drop(columns=[TARGET_VARIABLE_0])
 df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS, LAG_UCI)
 df_casos_uci_lagged = helpers.add_prefix(df_casos_uci_lagged, 'casos_uci__', FIX_COLUMNS)
+df_casos_uci_lagged = helpers.remove_location(df_casos_uci_lagged, 'sum')
 ### Cases tested ----
 df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, FIX_COLUMNS, LAG_CASOS)
 df_casos_lagged = helpers.add_prefix(df_casos_lagged, 'casos__', FIX_COLUMNS)
+df_casos_lagged = helpers.remove_location(df_casos_lagged, 'sum')
 ### AEMET temperature ----
 df_aemet_lagged = helpers.shift_timeseries_by_lags(df_aemet, FIX_COLUMNS, LAG_OTHER)
 df_aemet_lagged = helpers.add_prefix(df_aemet_lagged, 'aemet__', FIX_COLUMNS)
+df_aemet_lagged = helpers.remove_location(df_aemet_lagged, 'mean')
 ### Google Trends ----
 df_googletrends_lagged = helpers.shift_timeseries_by_lags(df_googletrends, FIX_COLUMNS, LAG_OTHER)
 df_googletrends_lagged = helpers.add_prefix(df_googletrends_lagged, 'googletrends__', FIX_COLUMNS)
+df_googletrends_lagged = helpers.remove_location(df_googletrends_lagged, 'sum')
 ### Movements to Madrid (`mitma`) ----
 df_mitma_lagged = helpers.shift_timeseries_by_lags(df_mitma, FIX_COLUMNS, LAG_OTHER)
 df_mitma_lagged = helpers.add_prefix(df_mitma_lagged, 'mitma__', FIX_COLUMNS)
+df_mitma_lagged = helpers.remove_location(df_mitma_lagged, 'sum')
 ### Vaccination in Spain (`mscbs`) ----
 df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs, FIX_COLUMNS, LAG_OTHER)
 df_mscbs_lagged = helpers.add_prefix(df_mscbs_lagged, 'mscbs__', FIX_COLUMNS)
+df_mscbs_lagged = helpers.remove_location(df_mscbs_lagged, 'sum')
 ### Holidays ----
 df_holidays_lagged = helpers.shift_timeseries_by_lags(df_holidays, FIX_COLUMNS, LAG_OTHER)
 df_holidays_lagged = helpers.add_prefix(df_holidays_lagged, 'holidays__', FIX_COLUMNS)
+df_holidays_lagged = helpers.remove_location(df_holidays_lagged, 'max')
 
 # %%
 ## Calculate model for combination ----
@@ -105,28 +116,27 @@ def model_for_combination(combination, manual_column=None):
     # Merge the datasources
     df_merge = df_casos_uci_target.copy()
     if 'casos_uci' in combination:
-        df_merge = df_merge.merge(df_casos_uci_lagged, on=FIX_COLUMNS)
+        df_merge = df_merge.merge(df_casos_uci_lagged, on='fecha')
     if 'casos' in combination:
-        df_merge = df_merge.merge(df_casos_lagged, on=FIX_COLUMNS)
+        df_merge = df_merge.merge(df_casos_lagged, on='fecha')
     if 'aemet' in combination:
-        df_merge = df_merge.merge(df_aemet_lagged, on=FIX_COLUMNS)
+        df_merge = df_merge.merge(df_aemet_lagged, on='fecha')
     if 'googletrends' in combination:
-        df_merge = df_merge.merge(df_googletrends_lagged, on=FIX_COLUMNS)
+        df_merge = df_merge.merge(df_googletrends_lagged, on='fecha')
     if 'mitma' in combination:
-        df_merge = df_merge.merge(df_mitma_lagged, on=FIX_COLUMNS)
+        df_merge = df_merge.merge(df_mitma_lagged, on='fecha')
     if 'mscbs' in combination:
-        df_merge = df_merge.merge(df_mscbs_lagged, on=FIX_COLUMNS)
+        df_merge = df_merge.merge(df_mscbs_lagged, on='fecha')
     if 'holidays' in combination:
-        df_merge = df_merge.merge(df_holidays_lagged, on=FIX_COLUMNS)
+        df_merge = df_merge.merge(df_holidays_lagged, on='fecha')
+
+    # Remove `fecha`
+    df_merge = df_merge.drop(columns=FIX_COLUMNS, errors='ignore')
+    df_merge = df_merge.dropna().reset_index(drop=True)
 
     # Best business explanatory columns
     if manual_column is not None:
         df_merge = df_merge.loc[:, df_merge.columns.isin(manual_column)]
-
-    # Remove location information
-    df_merge = df_merge.drop(columns=['Code provincia alpha', 'Code comunidad autónoma alpha'], errors='ignore').groupby('fecha').sum()
-    df_merge = df_merge.drop(columns=FIX_COLUMNS, errors='ignore')
-    df_merge = df_merge.dropna().reset_index(drop=True)
 
     # Train test split
     df_train, df_test = train_test_split(df_merge, test_size=PROPORTION_TEST, random_state=42)
@@ -229,7 +239,8 @@ def colors_from_values(values, palette_name):
     palette = sns.color_palette(palette_name, len(values))
     return np.array(palette).take(indices, axis=0)
 
-df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('casos_uci', 'casos', 'googletrends'), MANUAL_COLUMNS)
+# 'casos_uci', 'casos', 
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('casos', 'googletrends'), MANUAL_COLUMNS)
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
 plt.figure(figsize=[6,10])

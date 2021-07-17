@@ -100,3 +100,13 @@ def add_prefix(df, prefix, exclude):
     columns_all[~columns_to_prefix] = prefix+columns_all[~columns_to_prefix]
     df.columns = columns_all
     return df
+
+def remove_location(df_merge, operator='sum'):
+    if operator == 'sum':
+        df_merge = df_merge.drop(columns=['Code provincia alpha', 'Code comunidad autónoma alpha'], errors='ignore').groupby('fecha').sum()
+    elif operator == 'mean':
+        df_merge = df_merge.drop(columns=['Code provincia alpha', 'Code comunidad autónoma alpha'], errors='ignore').groupby('fecha').mean()
+    elif operator == 'max':
+        df_merge = df_merge.drop(columns=['Code provincia alpha', 'Code comunidad autónoma alpha'], errors='ignore').groupby('fecha').max()
+
+    return df_merge
