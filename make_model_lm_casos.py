@@ -311,6 +311,6 @@ df_combination = pd.DataFrame({
 df_combination
 
 feat_importances = pd.Series(regr.feature_importances_, index=X_train.columns)
-feat_importances.nlargest(20).plot(kind='barh', title='Feature importance').invert_yaxis()
+feat_importances.sort_values().plot(kind='barh', title='Feature importance').invert_yaxis()
 
 # %%
