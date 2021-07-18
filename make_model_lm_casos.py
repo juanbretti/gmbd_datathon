@@ -111,7 +111,7 @@ df_holidays_lagged = helpers.remove_location(df_holidays_lagged, 'max')
 
 # %%
 ## Calculate model for combination ----
-def model_for_combination(combination, manual_column=None):
+def model_for_combination(combination, manual_column=None, filter_non_significant = True):
 
     # Merge the datasources
     df_merge = df_casos_uci_target.copy()
@@ -159,27 +159,34 @@ def model_for_combination(combination, manual_column=None):
     results = model.fit()
 
     # Ensure to remove all the non-significant variables
-    for _ in range(0, 5):
-        # Filter by `p-value`
-        results_filtered = results.pvalues[results.pvalues.values<=P_VALUE]
-        results_filtered_col = results_filtered.keys()
+    if filter_non_significant:
+        for _ in range(0, 5):
+            # Filter by `p-value`
+            results_filtered = results.pvalues[results.pvalues.values<=P_VALUE]
+            results_filtered_col = results_filtered.keys()
 
-        # New model, after filter
-        model = sm.OLS(y_train, X_train_scaled[results_filtered_col])
-        results = model.fit()
+            # New model, after filter
+            model = sm.OLS(y_train, X_train_scaled[results_filtered_col])
+            results = model.fit()
 
     # Predict
-    # y_train_pred = results.predict(X_train_scaled[results_filtered_col])
-    y_test_pred = results.predict(X_test_scaled[results_filtered_col])
-    # y_test_pred = results.predict(X_test_scaled)
+    if filter_non_significant:
+        # y_train_pred = results.predict(X_train_scaled[results_filtered_col])
+        y_test_pred = results.predict(X_test_scaled[results_filtered_col])
+        num_features = len(results_filtered_col)
+        col_features = results_filtered_col
+    else:
+        y_test_pred = results.predict(X_test_scaled)
+        num_features = X_test_scaled.shape[1]
+        col_features = X_test_scaled.columns
 
     # Append results
     # results.rsquared_adj
     df_combination = pd.DataFrame({
         'Combination': str(combination), 
+        'Columns': str(col_features.to_list()),
         'Combination length': len(combination), 
-        'Number of features': len(results_filtered_col),
-        # 'Number of features': X_test_scaled.shape[1], 
+        'Number of features': num_features,
         'R2 train': results.rsquared_adj, 
         'R2 test': metrics.r2_score(y_test, y_test_pred)}, index=[0])
 
@@ -312,5 +319,30 @@ df_combination
 
 feat_importances = pd.Series(regr.feature_importances_, index=X_train.columns)
 feat_importances.sort_values().plot(kind='barh', title='Feature importance').invert_yaxis()
+
+# %%
+## All possible column combinations ----
+all_columns_combinations = []
+for i in range(1, len(X_train_scaled.columns)+1):
+    all_columns_combinations = all_columns_combinations + list(itertools.combinations(X_train_scaled.columns, i))
+
+combination = ('googletrends', 'casos')
+df_all_column_combinations, df_all_column_coefficients = pd.DataFrame(), pd.DataFrame()
+
+for columns_combination in all_columns_combinations:
+    try:
+        # print(f'Calculating: {str(columns_combination)}')
+        columns_combination = list(columns_combination) + [TARGET_VARIABLE_2]
+        df_combination, df_coefficients = model_for_combination(combination, columns_combination, False)[0:2]
+        df_all_column_combinations = df_all_column_combinations.append(df_combination, ignore_index=True)
+        df_all_column_coefficients = df_all_column_coefficients.append(df_coefficients, ignore_index=True)
+    except:
+        print(f'Error: {str(columns_combination)}')
+
+# %%
+df_all_column_combinations = df_all_column_combinations.sort_values(by=['R2 test', 'Combination length'], ascending=[False, True])
+df_all_column_combinations.head(1000)
+
+df_all_column_combinations.to_csv('storage/df_all_column_combinations.csv', index=False)
 
 # %%
