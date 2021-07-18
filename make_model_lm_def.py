@@ -192,6 +192,7 @@ def model_for_combination(combination, manual_column=None, filter_non_significan
 
     df_coefficients = pd.DataFrame({
         'Combination': str(combination), 
+        'Columns': str(col_features.to_list()),
         'Feature': results.pvalues.keys(),
         'Coefficient': results.params.values, 
         'p-value': results.pvalues.values})
@@ -344,10 +345,11 @@ for columns_combination in all_columns_combinations:
     except:
         print(f'Error: {str(columns_combination)}')
 
-# %%
 ## Sort and export ----
 df_all_column_combinations = df_all_column_combinations.sort_values(by=['R2 test', 'Combination length'], ascending=[False, True])
 df_all_column_combinations.head(1000)
+
 df_all_column_combinations.to_csv('storage/df_all_column_combinations_lm_def.csv', index=False)
+df_all_column_coefficients.to_csv('storage/df_all_column_coefficients_lm_def.csv', index=False)
 
 # %%
