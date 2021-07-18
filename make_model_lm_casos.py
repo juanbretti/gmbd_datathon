@@ -242,8 +242,8 @@ def colors_from_values(values, palette_name):
     palette = sns.color_palette(palette_name, len(values))
     return np.array(palette).take(indices, axis=0)
 
-# 'casos_uci', 'casos', 
-df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(('googletrends', 'casos'), MANUAL_COLUMNS)
+combination = ('googletrends', 'casos')
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(combination, MANUAL_COLUMNS)
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
 plt.figure(figsize=[6,10])
@@ -287,5 +287,30 @@ ProfileReport_setup = {
 # ProfileReport(df_mitma, title="df_mitma", **ProfileReport_setup).to_widgets()
 # ProfileReport(df_mscbs, title="df_mscbs", **ProfileReport_setup).to_widgets()
 # ProfileReport(df_holidays, title="df_holidays", **ProfileReport_setup).to_widgets()
+
+# %%
+## Non linear model ----
+from sklearn.ensemble import GradientBoostingRegressor
+
+X_train = X_train_scaled.drop(columns='const')
+X_test = X_test_scaled.drop(columns='const')
+
+regr = GradientBoostingRegressor(max_depth=1000, random_state=SEED)
+regr.fit(X_train, y_train)
+
+y_train_pred = regr.predict(X_train)
+y_test_pred = regr.predict(X_test)
+
+df_combination = pd.DataFrame({
+    'Combination': str(combination), 
+    'Combination length': len(combination), 
+    'Number of features': X_train.shape[1],
+    'R2 train': metrics.r2_score(y_train, y_train_pred), 
+    'R2 test': metrics.r2_score(y_test, y_test_pred)}, index=[0])
+
+df_combination
+
+feat_importances = pd.Series(regr.feature_importances_, index=X_train.columns)
+feat_importances.nlargest(20).plot(kind='barh', title='Feature importance').invert_yaxis()
 
 # %%
