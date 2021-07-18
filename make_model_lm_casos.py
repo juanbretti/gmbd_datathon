@@ -340,9 +340,9 @@ for columns_combination in all_columns_combinations:
         print(f'Error: {str(columns_combination)}')
 
 # %%
+## Sort and export ----
 df_all_column_combinations = df_all_column_combinations.sort_values(by=['R2 test', 'Combination length'], ascending=[False, True])
 df_all_column_combinations.head(1000)
-
-df_all_column_combinations.to_csv('storage/df_all_column_combinations.csv', index=False)
+df_all_column_combinations.to_csv('storage/df_all_column_combinations_lm_casos.csv', index=False)
 
 # %%
