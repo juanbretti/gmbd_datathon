@@ -43,5 +43,6 @@ censo_2 = censo_2.reset_index()
 dump(censo_2, 'storage/df_export_censo.joblib') 
 
 # %%
-
 censo_2.groupby('Date').sum()
+
+# %%

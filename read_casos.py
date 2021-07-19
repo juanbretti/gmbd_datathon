@@ -39,13 +39,15 @@ cases_uci_base_columns = ['fecha', 'provincia_iso', 'Code comunidad autónoma al
 censo_column = 'Total'
 
 # Calculate the ratio
-df_cases_ratio = df_cases[cases_value_columns].apply(lambda x: x/df_cases[censo_column]*100e3).add_prefix(RATIO_PREFIX)
-df_cases_uci_ratio = df_cases_uci[cases_uci_value_columns].apply(lambda x: x/df_cases_uci[censo_column]*100e3).add_prefix(RATIO_PREFIX)
+# df_cases_ratio = df_cases[cases_value_columns].apply(lambda x: x/df_cases[censo_column]*100e3).add_prefix(RATIO_PREFIX)
+# df_cases_uci_ratio = df_cases_uci[cases_uci_value_columns].apply(lambda x: x/df_cases_uci[censo_column]*100e3).add_prefix(RATIO_PREFIX)
+df_cases_ratio = df_cases[cases_value_columns].apply(lambda x: x).add_prefix(RATIO_PREFIX)
+df_cases_uci_ratio = df_cases_uci[cases_uci_value_columns].apply(lambda x: x).add_prefix(RATIO_PREFIX)
 
 # Concatenate the tables
 ### CONTROL: Add here the original columns, by removing `cases_base_columns`
-df_cases_concat = pd.concat([df_cases[cases_base_columns], df_cases_ratio], axis=1)
-df_cases_uci_concat = pd.concat([df_cases_uci[cases_uci_base_columns], df_cases_uci_ratio], axis=1)
+df_cases_concat = pd.concat([df_cases], axis=1)
+df_cases_uci_concat = pd.concat([df_cases_uci], axis=1)
 
 # %%
 cases_value_columns_ratio = [RATIO_PREFIX+x for x in cases_value_columns]
@@ -53,8 +55,8 @@ cases_uci_value_columns_ratio = [RATIO_PREFIX+x for x in cases_uci_value_columns
 
 # Pivot the data values
 ### CONTROL: Add the list of columns `cases_value_columns`
-df_cases_pivot = pd.pivot_table(df_cases_concat, index=['fecha'], columns=['Code comunidad autónoma alpha'], values=cases_value_columns_ratio, aggfunc=np.sum, fill_value=0)
-df_cases_uci_pivot = pd.pivot_table(df_cases_uci_concat, index=['fecha'], columns=['Code comunidad autónoma alpha', 'grupo_edad_merged'], values=cases_uci_value_columns_ratio, aggfunc=np.sum, fill_value=0)
+df_cases_pivot = pd.pivot_table(df_cases_concat, index=['fecha'], columns=['Code comunidad autónoma alpha'], values=cases_value_columns, aggfunc=np.sum, fill_value=0)
+df_cases_uci_pivot = pd.pivot_table(df_cases_uci_concat, index=['fecha'], columns=['Code comunidad autónoma alpha', 'grupo_edad_merged'], values=cases_uci_value_columns, aggfunc=np.sum, fill_value=0)
 
 # %%
 # Target variable

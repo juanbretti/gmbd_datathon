@@ -110,7 +110,7 @@ df_aggregate_censo['ratio_population__Dosis administradas (2)'] = df_aggregate_c
 ### Pivot ----
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
 ### CONTROL: Change the `values` and `aggfunc`
-df_pivot = pd.pivot_table(df_aggregate_censo, values=['ratio_population__Dosis administradas (2)'], index=['date'], columns=['Code comunidad autónoma alpha'], aggfunc={'ratio_population__Dosis administradas (2)': np.sum}, fill_value=0)
+df_pivot = pd.pivot_table(df_aggregate_censo, values=['Dosis administradas (2)'], index=['date'], columns=['Code comunidad autónoma alpha'], aggfunc=np.sum, fill_value=0)
 df_pivot = df_pivot.resample('d').interpolate(limit_direction='both').reset_index()
 df_pivot = df_pivot.set_index('date')
 

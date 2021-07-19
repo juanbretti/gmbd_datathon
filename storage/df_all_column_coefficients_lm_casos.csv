@@ -1,95 +1,39 @@
 Combination,Columns,Feature,Coefficient,p-value
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10']",const,757.814745430323,1.7279553911183e-108
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10']",casos__ratio_population__num_casos__lag_10,735.9017145564677,4.786725470401971e-105
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",const,757.814745430323,1.8219345354775752e-64
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,510.4204984582583,3.1201403936714614e-36
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10']",const,757.814745430323,1.2668855526755786e-54
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,358.08564928836745,7.971338703609433e-17
-"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",const,757.814745430323,1.0118656548934066e-47
-"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,-16.037746200699285,0.7215663269696488
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10']",const,757.814745430323,1.7279553911183e-108
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10']",casos__ratio_population__num_casos__lag_10,735.9017145564677,4.786725470401971e-105
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",const,757.814745430323,1.8219345354775752e-64
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,510.4204984582583,3.1201403936714614e-36
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10']",const,757.814745430323,1.2668855526755786e-54
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,358.08564928836745,7.971338703609433e-17
-"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",const,757.814745430323,1.0118656548934066e-47
-"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,-16.037746200699285,0.7215663269696488
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",const,757.814745430323,9.47265736509591e-119
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",casos__ratio_population__num_casos__lag_10,637.1721350077971,1.5355454149190599e-84
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,208.04528000253768,8.993808566440077e-16
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10']",const,757.814745430323,2.718460895223819e-111
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10']",casos__ratio_population__num_casos__lag_10,696.6995104533211,6.936480968395635e-94
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,110.16484086697056,1.1556517135515117e-05
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__fiebre__lag_15']",const,757.814745430323,1.8710142391513495e-108
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,737.7693761857942,4.375396850534836e-105
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,29.957512733400428,0.20815945486998327
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",const,757.814745430323,4.025076887497654e-69
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__toque de queda__lag_5,445.09391416406396,9.345261234238849e-30
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,233.6309914397112,2.4919320968191434e-10
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,757.814745430323,3.7086355080375298e-65
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,532.3047787084656,1.0560864524364043e-37
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,100.20963183980139,0.006961319496800098
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.814745430323,4.449215040109122e-55
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,380.1281356401087,5.250053830429752e-18
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,-99.90614951857619,0.01714346313686592
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",const,757.814745430323,9.47265736509591e-119
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",casos__ratio_population__num_casos__lag_10,637.1721350077971,1.5355454149190599e-84
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,208.04528000253768,8.993808566440077e-16
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10']",const,757.814745430323,2.718460895223819e-111
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10']",casos__ratio_population__num_casos__lag_10,696.6995104533211,6.936480968395635e-94
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,110.16484086697056,1.1556517135515117e-05
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__fiebre__lag_15']",const,757.814745430323,1.8710142391513495e-108
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,737.7693761857942,4.375396850534836e-105
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,29.957512733400428,0.20815945486998327
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",const,757.814745430323,4.025076887497654e-69
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__toque de queda__lag_5,445.09391416406396,9.345261234238849e-30
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,233.6309914397112,2.4919320968191434e-10
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,757.814745430323,3.7086355080375298e-65
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,532.3047787084656,1.0560864524364043e-37
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,100.20963183980139,0.006961319496800098
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.814745430323,4.449215040109122e-55
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,380.1281356401087,5.250053830429752e-18
-"('googletrends', 'casos')","['const', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,-99.90614951857619,0.01714346313686592
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",const,757.8147454303225,1.1394949826698649e-120
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",casos__ratio_population__num_casos__lag_10,612.594902367112,1.5740408815895305e-78
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__toque de queda__lag_5,195.8487245926362,1.8961280716306943e-14
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,85.33138111651498,0.0002576211941137488
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,757.8147454303225,3.161364048267432e-120
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,633.2949460132562,4.5469755072276e-85
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,225.77264192568515,9.5557279515628e-18
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,72.74955010279643,0.0010613980834992096
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.8147454303225,5.334321737875552e-111
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,697.2363813911101,2.0867728536889015e-92
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,109.23934465462747,2.6940926558644533e-05
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,3.3288494341322177,0.8900321524021533
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.8147454303225,4.80715706629881e-69
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,455.4824064817875,1.2611753411411715e-28
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,223.1824606257142,7.0713557856865024e-09
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,34.19160172962083,0.3566258554243664
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",const,757.8147454303225,1.1394949826698649e-120
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",casos__ratio_population__num_casos__lag_10,612.594902367112,1.5740408815895305e-78
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__toque de queda__lag_5,195.8487245926362,1.8961280716306943e-14
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10']",googletrends__confinamiento__lag_10,85.33138111651498,0.0002576211941137488
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,757.8147454303225,3.161364048267432e-120
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,633.2949460132562,4.5469755072276e-85
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,225.77264192568515,9.5557279515628e-18
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,72.74955010279643,0.0010613980834992096
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.8147454303225,5.334321737875552e-111
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,697.2363813911101,2.0867728536889015e-92
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,109.23934465462747,2.6940926558644533e-05
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,3.3288494341322177,0.8900321524021533
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.8147454303225,4.80715706629881e-69
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,455.4824064817875,1.2611753411411715e-28
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,223.1824606257142,7.0713557856865024e-09
-"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,34.19160172962083,0.3566258554243664
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.8147454303225,2.9778402545502084e-121
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,614.5833978931419,2.624588156447409e-79
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,211.22721881970702,1.3541595111450091e-15
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,68.56889523123465,0.004663610965789579
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,53.27801358097231,0.020437933205555873
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",const,757.8147454303225,2.9778402545502084e-121
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",casos__ratio_population__num_casos__lag_10,614.5833978931419,2.624588156447409e-79
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,211.22721881970702,1.3541595111450091e-15
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__confinamiento__lag_10,68.56889523123465,0.004663610965789579
-"('googletrends', 'casos')","['const', 'casos__ratio_population__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__confinamiento__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,53.27801358097231,0.020437933205555873
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10']",const,14.560835979724331,2.348839575150918e-106
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10']",casos__num_casos__lag_10,13.161022398829397,7.429257435172799e-95
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",const,14.560835979724331,2.5011756059610093e-67
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,9.146074857111342,3.531367021192316e-34
+"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",const,14.560835979724331,5.963994303018204e-51
+"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,-0.1610502740283443,0.8455350826676286
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10']",const,14.560835979724331,2.348839575150918e-106
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10']",casos__num_casos__lag_10,13.161022398829397,7.429257435172799e-95
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",const,14.560835979724331,2.5011756059610093e-67
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,9.146074857111342,3.531367021192316e-34
+"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",const,14.560835979724331,5.963994303018204e-51
+"('googletrends', 'casos')","['const', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,-0.1610502740283443,0.8455350826676286
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",const,14.560835979724331,1.5083718803574836e-114
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",casos__num_casos__lag_10,11.390720929207749,8.538697106518083e-74
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,3.7083633154097897,4.043178604692503e-13
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__fiebre__lag_15']",const,14.560835979724331,2.580973639939258e-106
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__fiebre__lag_15']",casos__num_casos__lag_10,13.193053941216323,6.28641373314742e-95
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,0.5745154451045076,0.2171620334198731
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,14.560835979724331,4.229267422093772e-68
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,9.56718200805234,8.696807600300576e-36
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,1.9282787497891334,0.005229703299496685
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",const,14.560835979724331,1.5083718803574836e-114
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",casos__num_casos__lag_10,11.390720929207749,8.538697106518083e-74
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5']",googletrends__toque de queda__lag_5,3.7083633154097897,4.043178604692503e-13
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__fiebre__lag_15']",const,14.560835979724331,2.580973639939258e-106
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__fiebre__lag_15']",casos__num_casos__lag_10,13.193053941216323,6.28641373314742e-95
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,0.5745154451045076,0.2171620334198731
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,14.560835979724331,4.229267422093772e-68
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,9.56718200805234,8.696807600300576e-36
+"('googletrends', 'casos')","['const', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,1.9282787497891334,0.005229703299496685
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,14.560835979724333,8.845169964750837e-116
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",casos__num_casos__lag_10,11.305765466318318,6.100587530935178e-74
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,4.044285760247618,8.136797176843576e-15
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,1.352502874054201,0.0022409398421495796
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",const,14.560835979724333,8.845169964750837e-116
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",casos__num_casos__lag_10,11.305765466318318,6.100587530935178e-74
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__toque de queda__lag_5,4.044285760247618,8.136797176843576e-15
+"('googletrends', 'casos')","['const', 'casos__num_casos__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15']",googletrends__fiebre__lag_15,1.352502874054201,0.0022409398421495796

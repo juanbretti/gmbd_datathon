@@ -52,14 +52,14 @@ LAG_TARGET = [-7]
 LAG_UCI = [1, 7, 14]
 LAG_CASOS = range(0, 30, 10)
 LAG_OTHER = range(0, 30, 5)
-TARGET_VARIABLE_0 = 'ratio_population__num_casos'
+TARGET_VARIABLE_0 = 'num_casos'
 TARGET_VARIABLE_1 = f'{TARGET_VARIABLE_0}__lag_{LAG_TARGET[0]}'
 TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
 SEED = 42
 PROPORTION_TEST = 0.3
 FIX_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
 SOURCES = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
-MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__ratio_population__num_casos__lag_-7', 'googletrends__confinamiento__lag_10', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15', 'casos__ratio_population__num_casos__lag_10']
+MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__num_casos__lag_-7', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15', 'casos__num_casos__lag_10']
 P_VALUE = 0.05
 
 # %%
@@ -78,16 +78,16 @@ df_holidays = load('storage/df_export_holidays_lm.joblib')
 df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS, LAG_TARGET)
 df_casos_uci_target = df_casos_uci_lagged[FIX_COLUMNS+[TARGET_VARIABLE_1]]
 df_casos_uci_target = helpers.add_prefix(df_casos_uci_target, 'casos_uci_target__', FIX_COLUMNS)
-df_casos_uci_target = helpers.remove_location(df_casos_uci_target, 'sum')
+df_casos_uci_target = helpers.remove_location(df_casos_uci_target, 'sum')/4.739422e+07*100e3
 ### Death age groups ----
 # df_casos_uci_ = df_casos_uci.drop(columns=[TARGET_VARIABLE_0])
 df_casos_uci_lagged = helpers.shift_timeseries_by_lags(df_casos_uci, FIX_COLUMNS, LAG_UCI)
 df_casos_uci_lagged = helpers.add_prefix(df_casos_uci_lagged, 'casos_uci__', FIX_COLUMNS)
-df_casos_uci_lagged = helpers.remove_location(df_casos_uci_lagged, 'sum')
+df_casos_uci_lagged = helpers.remove_location(df_casos_uci_lagged, 'sum')/4.739422e+07*100e3
 ### Cases tested ----
 df_casos_lagged = helpers.shift_timeseries_by_lags(df_casos, FIX_COLUMNS, LAG_CASOS)
 df_casos_lagged = helpers.add_prefix(df_casos_lagged, 'casos__', FIX_COLUMNS)
-df_casos_lagged = helpers.remove_location(df_casos_lagged, 'sum')
+df_casos_lagged = helpers.remove_location(df_casos_lagged, 'sum')/4.739422e+07*100e3
 ### AEMET temperature ----
 df_aemet_lagged = helpers.shift_timeseries_by_lags(df_aemet, FIX_COLUMNS, LAG_OTHER)
 df_aemet_lagged = helpers.add_prefix(df_aemet_lagged, 'aemet__', FIX_COLUMNS)
@@ -99,11 +99,11 @@ df_googletrends_lagged = helpers.remove_location(df_googletrends_lagged, 'sum')
 ### Movements to Madrid (`mitma`) ----
 df_mitma_lagged = helpers.shift_timeseries_by_lags(df_mitma, FIX_COLUMNS, LAG_OTHER)
 df_mitma_lagged = helpers.add_prefix(df_mitma_lagged, 'mitma__', FIX_COLUMNS)
-df_mitma_lagged = helpers.remove_location(df_mitma_lagged, 'sum')
+df_mitma_lagged = helpers.remove_location(df_mitma_lagged, 'sum')/4.739422e+07*100e3
 ### Vaccination in Spain (`mscbs`) ----
 df_mscbs_lagged = helpers.shift_timeseries_by_lags(df_mscbs, FIX_COLUMNS, LAG_OTHER)
 df_mscbs_lagged = helpers.add_prefix(df_mscbs_lagged, 'mscbs__', FIX_COLUMNS)
-df_mscbs_lagged = helpers.remove_location(df_mscbs_lagged, 'sum')
+df_mscbs_lagged = helpers.remove_location(df_mscbs_lagged, 'sum')/4.739422e+07*100e3
 ### Holidays ----
 df_holidays_lagged = helpers.shift_timeseries_by_lags(df_holidays, FIX_COLUMNS, LAG_OTHER)
 df_holidays_lagged = helpers.add_prefix(df_holidays_lagged, 'holidays__', FIX_COLUMNS)
@@ -227,13 +227,13 @@ df_all_coefficients_pivot = pd.pivot(df_all_coefficients, index=['Combination'],
 ### Sort values ----
 # pd.set_option('display.max_rows', 100)
 df_all_combinations = df_all_combinations.sort_values(by=['R2 test', 'Combination length'], ascending=[False, True])
-df_all_combinations.head(20)
+df_all_combinations.drop(columns=['Columns']).head(20)
 
 # %%
 ### Selection of some candidates ----
-t1 = df_all_combinations[df_all_combinations['Combination length'] == 1]
-t2 = df_all_combinations[(df_all_combinations['Combination length'] == 2) & (['googletrends' in x for x in df_all_combinations['Combination']])]
-t3 = df_all_combinations[(df_all_combinations['Combination length'] == 3) & (['googletrends' in x for x in df_all_combinations['Combination']])]
+t1 = df_all_combinations[df_all_combinations['Combination length'] == 1].drop(columns=['Columns'])
+t2 = df_all_combinations[(df_all_combinations['Combination length'] == 2) & (['googletrends' in x for x in df_all_combinations['Combination']])].drop(columns=['Columns'])
+t3 = df_all_combinations[(df_all_combinations['Combination length'] == 3) & (['googletrends' in x for x in df_all_combinations['Combination']])].drop(columns=['Columns'])
 
 # %%
 ### Coefficients per case ----
@@ -251,13 +251,15 @@ def colors_from_values(values, palette_name):
     return np.array(palette).take(indices, axis=0)
 
 combination = ('googletrends', 'casos')
-df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(combination, MANUAL_COLUMNS)
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(combination, MANUAL_COLUMNS, False)
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
 plt.figure(figsize=[6,10])
-sns.barplot(x='Coefficient', y='Feature', palette=colors_from_values(df_coefficients['p-value'], "YlOrRd"), data=df_coefficients)
+# sns.barplot(x='Coefficient', y='Feature', palette=colors_from_values(df_coefficients['p-value'], "YlOrRd"), data=df_coefficients)
+sns.barplot(x='Coefficient', y='Feature', color="salmon", data=df_coefficients)
 
-df_combination
+df_combination.drop(columns=['Columns'])
+df_coefficients.drop(columns=['Columns'])
 
 # %%
 ## Correlation plot ----
@@ -280,11 +282,11 @@ df_list = [df_casos_uci, df_casos_uci_lagged, df_casos_lagged, df_aemet_lagged, 
 # %%
 ## ProfileReport ----
 ProfileReport_setup = {
-    'samples': None,
-    'correlations': None,
-    'missing_diagrams': None,
-    'duplicates': None,
-    'interactions': None,
+    # 'samples': None,
+    # 'correlations': None,
+    # 'missing_diagrams': None,
+    # 'duplicates': None,
+    # 'interactions': None,
     'explorative': False,
 }
 

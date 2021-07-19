@@ -115,13 +115,15 @@ df_aggregate_censo = df_aggregate_censo[cases_value_columns].apply(lambda x: x/d
 
 # Concatenate
 aggegate_columns = ['fecha', 'viajes__sum', 'viajes__mean', 'viajes__std', 'viajes__min', 'viajes__max', 'viajes_km__sum', 'viajes_km__mean', 'viajes_km__std', 'viajes_km__min', 'viajes_km__max', 'origen_comunidad_autonoma', 'destino_provincia']
-df_aggregate_concat = pd.concat([df_aggregate[aggegate_columns], df_aggregate_censo], axis=1)
+# CONTROL: add `df_aggregate_censo`
+df_aggregate_concat = pd.concat([df_aggregate[aggegate_columns]], axis=1)
 
 # %%
 ### Pivot ----
 ### CONTROL: Change the `values` and `aggfunc`
 # df2_pivot = pd.pivot_table(df2, values=['viajes_sum', 'viajes_km_mean'], index=['fecha_', 'origen_province_'], columns=['destino_province_'], aggfunc={'viajes_sum': np.sum, 'viajes_km_mean': np.mean}, fill_value=0)
-df_pivot = pd.pivot_table(df_aggregate_concat, values=['ratio_population__viajes__sum'], index=['fecha', 'destino_provincia'], columns=['origen_comunidad_autonoma'], aggfunc={'ratio_population__viajes__sum': np.sum}, fill_value=0)
+# CONTORL: Add `ratio_population__`
+df_pivot = pd.pivot_table(df_aggregate_concat, values=['viajes__sum'], index=['fecha', 'destino_provincia'], columns=['origen_comunidad_autonoma'], aggfunc={'viajes__sum': np.sum}, fill_value=0)
 
 ### Replace column names ----
 columns_ = [x[1] for x in df_pivot.columns.to_flat_index()]
