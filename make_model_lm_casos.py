@@ -51,7 +51,7 @@ import statsmodels.api as sm
 LAG_TARGET = [-7]
 LAG_UCI = [1, 7, 14]
 LAG_CASOS = range(0, 30, 10)
-LAG_OTHER = range(0, 30, 5)
+LAG_OTHER = range(0, 30, 3)
 TARGET_VARIABLE_0 = 'num_casos'
 TARGET_VARIABLE_1 = f'{TARGET_VARIABLE_0}__lag_{LAG_TARGET[0]}'
 TARGET_VARIABLE_2 = f'casos_uci_target__{TARGET_VARIABLE_1}'
@@ -59,15 +59,18 @@ SEED = 42
 PROPORTION_TEST = 0.3
 FIX_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha']
 SOURCES = ['casos_uci', 'casos', 'aemet', 'googletrends', 'mitma', 'mscbs', 'holidays']
-MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__num_casos__lag_-7', 'googletrends__toque de queda__lag_5', 'googletrends__fiebre__lag_15', 'casos__num_casos__lag_10']
+MANUAL_COLUMNS = ['fecha', 'Code provincia alpha', 'Code comunidad autónoma alpha', 'casos_uci_target__num_casos__lag_-7', 'googletrends__toque de queda__lag_3', 'googletrends__fiebre__lag_15', 'casos__num_casos__lag_10']
 P_VALUE = 0.05
+
+COLUMNS_POLICY = ['astrazeneca', 'covid', 'janssen', 'pfizer', 'vacuna', 'confinamiento', 'hospital', 'toque de queda']
+COLUMNS_SYMPTOMS = ['ambulancia', 'dolor', 'enferma', 'enfermo', 'enfermo terminal', 'fiebre', 'respiración asistida', 'temperatura', 'tos', 'uci', 'entubado', 'infectados']
 
 # %%
 ## Read dataframes ----
 df_casos_uci = load('storage/df_export_cases_uci_lm.joblib')
 df_casos = load('storage/df_export_cases_lm.joblib')
 df_aemet = load('storage/df_export_aemet_lm.joblib')
-df_googletrends = load('storage/df_export_googletrends_lm.joblib')
+df_googletrends = load('storage/df_export_googletrends_lm.joblib')[FIX_COLUMNS+COLUMNS_POLICY]
 df_mitma = load('storage/df_export_mitma_lm.joblib')
 df_mscbs = load('storage/df_export_mscbs_lm.joblib')
 df_holidays = load('storage/df_export_holidays_lm.joblib')
@@ -251,7 +254,7 @@ def colors_from_values(values, palette_name):
     return np.array(palette).take(indices, axis=0)
 
 combination = ('googletrends', 'casos')
-df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(combination, MANUAL_COLUMNS, False)
+df_combination, df_coefficients, combination, model, results, X_train_scaled, y_train, X_test_scaled, y_test = model_for_combination(combination)
 df_coefficients = df_coefficients.sort_values('Coefficient', ascending=True)
 
 plt.figure(figsize=[6,10])
@@ -305,7 +308,7 @@ from sklearn.ensemble import GradientBoostingRegressor
 X_train = X_train_scaled.drop(columns='const')
 X_test = X_test_scaled.drop(columns='const')
 
-regr = GradientBoostingRegressor(max_depth=1000, random_state=SEED)
+regr = GradientBoostingRegressor(max_depth=5, random_state=SEED)
 regr.fit(X_train, y_train)
 
 y_train_pred = regr.predict(X_train)
